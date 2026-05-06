@@ -10,8 +10,9 @@ struct EssentialsBar: View {
     let audioService: any AudioService
     let language: Language
 
-    // Hit-target size comes from the profile's layout preference (passed in via environment in slice 16)
-    var itemSize: CGFloat = 80
+    // Hit-target size — defaults to a value that lets all 9 default Essentials
+    // items fit on iPad portrait without horizontal scrolling.
+    var itemSize: CGFloat = 64
 
     var body: some View {
         Group {
@@ -28,7 +29,7 @@ struct EssentialsBar: View {
 
     private var horizontalBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 ForEach(config.items) { item in
                     EssentialButton(
                         item: item,
@@ -40,13 +41,14 @@ struct EssentialsBar: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
+            .frame(maxWidth: .infinity)
         }
         .background(.ultraThinMaterial)
     }
 
     private var verticalBar: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 ForEach(config.items) { item in
                     EssentialButton(
                         item: item,

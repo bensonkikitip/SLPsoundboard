@@ -209,23 +209,9 @@ private struct ObjectTileView: View {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             onTap()
         } label: {
-            VStack(spacing: 4) {
-                // Object image (cutout) or placeholder icon
-                objectImage
-                    .frame(width: width * 0.75, height: height * 0.65)
-
-                // Label
-                Text(object.label)
-                    .font(.system(size: min(width * 0.14, 16), weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.7), radius: 2)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .frame(width: width)
-            }
-            .frame(width: width, height: height)
+            objectArtwork
+                .frame(width: width, height: height)
         }
-        .background(.black.opacity(0.28), in: RoundedRectangle(cornerRadius: 14))
         .buttonStyle(.plain)
         .scaleEffect(isPressed ? 0.93 : 1.0)
         .animation(.easeOut(duration: 0.1), value: isPressed)
@@ -238,19 +224,16 @@ private struct ObjectTileView: View {
         .accessibilityHint(String(localized: "Tap to speak: \(object.ttsText)"))
     }
 
+    /// The object's visual representation. Priority:
+    ///   1. Custom drawn artwork via `SceneObjectArtworkView` if the object's
+    ///      `imageAssetName` carries an `"art:..."` key OR a legacy
+    ///      `"sfsymbol:..."` value.
+    ///   2. A user-authored cutout image loaded from documents directory.
+    ///   3. Fall through to `SceneObjectArtworkView`'s neutral placeholder.
     @ViewBuilder
-    private var objectImage: some View {
-        if let sfName = object.systemImageName {
-            // Object has a seeded SF Symbol — render it in a styled tile
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(.black.opacity(0.30))
-                Image(systemName: sfName)
-                    .font(.system(size: width * 0.26))
-                    .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.4), radius: 2)
-            }
-            .frame(width: width * 0.82, height: height * 0.65)
+    private var objectArtwork: some View {
+        if object.artworkKey != nil || object.systemImageName != nil {
+            SceneObjectArtworkView(object: object, width: width, height: height)
         } else if let assetName = object.imageAssetName,
                   let url = FileManager.default
                     .urls(for: .documentDirectory, in: .userDomainMask)
@@ -261,10 +244,7 @@ private struct ObjectTileView: View {
                 .resizable()
                 .scaledToFit()
         } else {
-            // Generic placeholder until cutout is authored
-            Image(systemName: object.kind == .phraseIntent ? "bubble.left.fill" : "photo")
-                .font(.system(size: width * 0.3))
-                .foregroundStyle(.white.opacity(0.85))
+            SceneObjectArtworkView(object: object, width: width, height: height)
         }
     }
 }

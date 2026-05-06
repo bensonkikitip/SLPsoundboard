@@ -1,9 +1,17 @@
 import Foundation
 
 /// Seed data for the Hospital starter scene provisioned on first launch.
-/// Contains intent-focused objects relevant to an inpatient hospital stay
-/// plus ambient items. Stock cutouts use SF Symbol names (no image data yet).
-/// Audio defaults to TTS; family/SLP replace with voice clips over time.
+///
+/// V2 (noun-only): The Hospital Room scene contains exclusively physical noun
+/// objects (Bed, TV, Toilet, Cup, IV pole, Chair, Window, Clock, Pillow, Nurse
+/// call button). Tapping a noun speaks the noun via TTS — `ttsOverride: nil` so
+/// `SceneObject.ttsText` falls back to `label`. Action vocabulary (Pain, Help,
+/// Nurse, Water, Bathroom, Cold, Hot) lives only in the Essentials bar.
+///
+/// Each object's `imageAssetName` carries an artwork key prefixed with `"art:"`
+/// (e.g. `"art:bed"`). `SceneObjectArtworkView` reads these keys and renders
+/// custom SwiftUI shapes per prop. SF symbol fallback ("sfsymbol:...") is still
+/// honored for backward compatibility with previously-seeded data.
 enum HospitalStarter {
 
     struct SeedResult {
@@ -22,49 +30,37 @@ enum HospitalStarter {
     // MARK: - English seed
 
     private static func seedEnglish(profileId: UUID) -> SeedResult {
-        // Phrase-intent objects
-        let callNurse   = makeObject(profileId, "Call nurse",    .phraseIntent, "Please call the nurse",       "stethoscope")
-        let needBath    = makeObject(profileId, "Need bathroom", .phraseIntent, "I need the bathroom",         "signpost.right.fill")
-        let inPain      = makeObject(profileId, "I'm in pain",   .phraseIntent, "I am in pain",                "bolt.heart.fill")
-        let adjustBed   = makeObject(profileId, "Adjust bed",    .phraseIntent, "Please adjust my bed",        "bed.double.fill")
-        let needWater   = makeObject(profileId, "Need water",    .phraseIntent, "I need water",                "drop.fill")
-        let needPillow  = makeObject(profileId, "Need pillow",   .phraseIntent, "I need a pillow",             "moon.zzz.fill")
-        let tvPlease    = makeObject(profileId, "TV please",     .phraseIntent, "Can you turn on the TV",      "tv.fill")
-        // Noun objects (ambient)
-        let bed         = makeObject(profileId, "Bed",     .noun, nil, "bed.double")
-        let waterCup    = makeObject(profileId, "Cup",     .noun, nil, "cup.and.saucer.fill")
-        let ivPole      = makeObject(profileId, "IV pole", .noun, nil, "ivfluid.bag.fill")
-        let famChair    = makeObject(profileId, "Chair",   .noun, nil, "chair.lounge.fill")
+        let bed       = noun(profileId, "Bed",        "art:bed")
+        let pillow    = noun(profileId, "Pillow",     "art:pillow")
+        let tv        = noun(profileId, "TV",         "art:tv")
+        let ivPole    = noun(profileId, "IV pole",    "art:ivpole")
+        let cup       = noun(profileId, "Cup",        "art:cup")
+        let toilet    = noun(profileId, "Toilet",     "art:toilet")
+        let chair     = noun(profileId, "Chair",      "art:chair")
+        let window    = noun(profileId, "Window",     "art:window")
+        let clock     = noun(profileId, "Clock",      "art:clock")
+        let nurseCall = noun(profileId, "Nurse call", "art:nurseCall")
 
-        let allObjects = [callNurse, needBath, inPain, adjustBed, needWater, needPillow, tvPlease,
-                          bed, waterCup, ivPole, famChair]
+        let allObjects = [bed, pillow, tv, ivPole, cup, toilet, chair, window, clock, nurseCall]
 
-        // ── Contextual placement ──────────────────────────────────────────────
-        // Imagine a hospital room from the foot of the bed (landscape iPad):
-        //   • Headboard / nurse call: upper-left  • TV: upper-right
-        //   • Bed center: mid-canvas              • IV pole: right edge
-        //   • Nightstand/water: right-center      • Bathroom door: lower-right
-        //   • Family chair: lower-left
+        // Hospital room from the foot of the bed (landscape iPad):
+        //   • Clock upper-left      • Window upper-center      • TV upper-right
+        //   • Nurse call at headboard (left side of bed)
+        //   • Bed in centre           • Pillow at the head of bed
+        //   • IV pole right of bed    • Cup on right nightstand
+        //   • Chair lower-left        • Toilet lower-right (bathroom corner)
         let sceneId = UUID()
         let placements: [Placement] = [
-            // Nurse call button is at the headboard — upper-left
-            Placement(objectId: callNurse.id,  sceneId: sceneId, x: 0.05, y: 0.10, width: 0.22, height: 0.22, zIndex: 1),
-            // Pain indicator — above the patient's head area
-            Placement(objectId: inPain.id,     sceneId: sceneId, x: 0.38, y: 0.10, width: 0.22, height: 0.22, zIndex: 1),
-            // Pillow request — near headboard, upper-center
-            Placement(objectId: needPillow.id, sceneId: sceneId, x: 0.22, y: 0.10, width: 0.20, height: 0.20, zIndex: 1),
-            // TV is wall-mounted upper-right
-            Placement(objectId: tvPlease.id,   sceneId: sceneId, x: 0.68, y: 0.08, width: 0.22, height: 0.22, zIndex: 1),
-            // Adjust bed — center-lower (bed controls at foot of bed)
-            Placement(objectId: adjustBed.id,  sceneId: sceneId, x: 0.38, y: 0.62, width: 0.22, height: 0.22, zIndex: 1),
-            // Water cup on the right nightstand
-            Placement(objectId: needWater.id,  sceneId: sceneId, x: 0.72, y: 0.38, width: 0.22, height: 0.22, zIndex: 1),
-            // Bathroom door — lower-right
-            Placement(objectId: needBath.id,   sceneId: sceneId, x: 0.72, y: 0.68, width: 0.22, height: 0.22, zIndex: 1),
-            // Ambient nouns
-            Placement(objectId: waterCup.id,   sceneId: sceneId, x: 0.80, y: 0.48, width: 0.12, height: 0.12, zIndex: 0),
-            Placement(objectId: ivPole.id,     sceneId: sceneId, x: 0.88, y: 0.20, width: 0.10, height: 0.18, zIndex: 0),
-            Placement(objectId: famChair.id,   sceneId: sceneId, x: 0.04, y: 0.62, width: 0.14, height: 0.18, zIndex: 0),
+            Placement(objectId: clock.id,     sceneId: sceneId, x: 0.10, y: 0.10, width: 0.08, height: 0.08, zIndex: 1),
+            Placement(objectId: window.id,    sceneId: sceneId, x: 0.40, y: 0.06, width: 0.16, height: 0.18, zIndex: 1),
+            Placement(objectId: tv.id,        sceneId: sceneId, x: 0.70, y: 0.10, width: 0.20, height: 0.16, zIndex: 1),
+            Placement(objectId: nurseCall.id, sceneId: sceneId, x: 0.20, y: 0.32, width: 0.06, height: 0.10, zIndex: 2),
+            Placement(objectId: pillow.id,    sceneId: sceneId, x: 0.36, y: 0.36, width: 0.10, height: 0.08, zIndex: 3),
+            Placement(objectId: bed.id,       sceneId: sceneId, x: 0.32, y: 0.42, width: 0.36, height: 0.30, zIndex: 1),
+            Placement(objectId: ivPole.id,    sceneId: sceneId, x: 0.76, y: 0.32, width: 0.07, height: 0.30, zIndex: 1),
+            Placement(objectId: cup.id,       sceneId: sceneId, x: 0.85, y: 0.50, width: 0.08, height: 0.10, zIndex: 1),
+            Placement(objectId: chair.id,     sceneId: sceneId, x: 0.06, y: 0.62, width: 0.14, height: 0.20, zIndex: 1),
+            Placement(objectId: toilet.id,    sceneId: sceneId, x: 0.78, y: 0.74, width: 0.12, height: 0.16, zIndex: 1),
         ]
 
         let hospitalRoom = SceneTalkScene(
@@ -80,33 +76,31 @@ enum HospitalStarter {
     // MARK: - Spanish seed
 
     private static func seedSpanish(profileId: UUID) -> SeedResult {
-        let callNurse   = makeObject(profileId, "Llamar enfermera",  .phraseIntent, "Por favor llame a la enfermera", "stethoscope")
-        let needBath    = makeObject(profileId, "Necesito el baño",  .phraseIntent, "Necesito ir al baño",            "signpost.right.fill")
-        let inPain      = makeObject(profileId, "Tengo dolor",       .phraseIntent, "Tengo dolor",                    "bolt.heart.fill")
-        let adjustBed   = makeObject(profileId, "Ajustar cama",      .phraseIntent, "Por favor ajuste mi cama",       "bed.double.fill")
-        let needWater   = makeObject(profileId, "Necesito agua",     .phraseIntent, "Necesito agua",                  "drop.fill")
-        let needPillow  = makeObject(profileId, "Necesito almohada", .phraseIntent, "Necesito una almohada",          "moon.zzz.fill")
-        let tvPlease    = makeObject(profileId, "Prender la tele",   .phraseIntent, "Puede prender la televisión",    "tv.fill")
-        let bed         = makeObject(profileId, "Cama",      .noun, nil, "bed.double")
-        let waterCup    = makeObject(profileId, "Taza",      .noun, nil, "cup.and.saucer.fill")
-        let ivPole      = makeObject(profileId, "Suero",     .noun, nil, "ivfluid.bag.fill")
-        let famChair    = makeObject(profileId, "Silla",     .noun, nil, "chair.lounge.fill")
+        let bed       = noun(profileId, "Cama",            "art:bed")
+        let pillow    = noun(profileId, "Almohada",        "art:pillow")
+        let tv        = noun(profileId, "Televisión",      "art:tv")
+        let ivPole    = noun(profileId, "Suero",           "art:ivpole")
+        let cup       = noun(profileId, "Taza",            "art:cup")
+        let toilet    = noun(profileId, "Inodoro",         "art:toilet")
+        let chair     = noun(profileId, "Silla",           "art:chair")
+        let window    = noun(profileId, "Ventana",         "art:window")
+        let clock     = noun(profileId, "Reloj",           "art:clock")
+        let nurseCall = noun(profileId, "Botón enfermera", "art:nurseCall")
 
-        let allObjects = [callNurse, needBath, inPain, adjustBed, needWater, needPillow, tvPlease,
-                          bed, waterCup, ivPole, famChair]
+        let allObjects = [bed, pillow, tv, ivPole, cup, toilet, chair, window, clock, nurseCall]
 
         let sceneId = UUID()
         let placements: [Placement] = [
-            Placement(objectId: callNurse.id,  sceneId: sceneId, x: 0.05, y: 0.10, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: inPain.id,     sceneId: sceneId, x: 0.38, y: 0.10, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: needPillow.id, sceneId: sceneId, x: 0.22, y: 0.10, width: 0.20, height: 0.20, zIndex: 1),
-            Placement(objectId: tvPlease.id,   sceneId: sceneId, x: 0.68, y: 0.08, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: adjustBed.id,  sceneId: sceneId, x: 0.38, y: 0.62, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: needWater.id,  sceneId: sceneId, x: 0.72, y: 0.38, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: needBath.id,   sceneId: sceneId, x: 0.72, y: 0.68, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: waterCup.id,   sceneId: sceneId, x: 0.80, y: 0.48, width: 0.12, height: 0.12, zIndex: 0),
-            Placement(objectId: ivPole.id,     sceneId: sceneId, x: 0.88, y: 0.20, width: 0.10, height: 0.18, zIndex: 0),
-            Placement(objectId: famChair.id,   sceneId: sceneId, x: 0.04, y: 0.62, width: 0.14, height: 0.18, zIndex: 0),
+            Placement(objectId: clock.id,     sceneId: sceneId, x: 0.10, y: 0.10, width: 0.08, height: 0.08, zIndex: 1),
+            Placement(objectId: window.id,    sceneId: sceneId, x: 0.40, y: 0.06, width: 0.16, height: 0.18, zIndex: 1),
+            Placement(objectId: tv.id,        sceneId: sceneId, x: 0.70, y: 0.10, width: 0.20, height: 0.16, zIndex: 1),
+            Placement(objectId: nurseCall.id, sceneId: sceneId, x: 0.20, y: 0.32, width: 0.06, height: 0.10, zIndex: 2),
+            Placement(objectId: pillow.id,    sceneId: sceneId, x: 0.36, y: 0.36, width: 0.10, height: 0.08, zIndex: 3),
+            Placement(objectId: bed.id,       sceneId: sceneId, x: 0.32, y: 0.42, width: 0.36, height: 0.30, zIndex: 1),
+            Placement(objectId: ivPole.id,    sceneId: sceneId, x: 0.76, y: 0.32, width: 0.07, height: 0.30, zIndex: 1),
+            Placement(objectId: cup.id,       sceneId: sceneId, x: 0.85, y: 0.50, width: 0.08, height: 0.10, zIndex: 1),
+            Placement(objectId: chair.id,     sceneId: sceneId, x: 0.06, y: 0.62, width: 0.14, height: 0.20, zIndex: 1),
+            Placement(objectId: toilet.id,    sceneId: sceneId, x: 0.78, y: 0.74, width: 0.12, height: 0.16, zIndex: 1),
         ]
 
         let habitacion = SceneTalkScene(
@@ -121,33 +115,41 @@ enum HospitalStarter {
 
     // MARK: - Helpers
 
-    private static func makeObject(
-        _ profileId: UUID,
-        _ label: String,
-        _ kind: ObjectKind,
-        _ ttsOverride: String?,
-        _ systemImageName: String
-    ) -> SceneObject {
-        SceneObject(
+    /// Build a noun object with no TTS override (taps speak the label) and an
+    /// artwork key as `imageAssetName`.
+    private static func noun(_ profileId: UUID, _ label: String, _ artworkKey: String) -> SceneObject {
+        var object = SceneObject(
             profileId: profileId,
             label: label,
-            kind: kind,
-            ttsOverride: ttsOverride
-        ).withSystemImageName(systemImageName)
+            kind: .noun,
+            ttsOverride: nil
+        )
+        object.imageAssetName = artworkKey
+        return object
     }
 }
 
-// MARK: - SceneObject extension for seed convenience
+// MARK: - SceneObject artwork-key extension
 
 extension SceneObject {
-    /// SF Symbol name stored on the object for the patient-mode placeholder icon
-    /// (used until a real cutout is authored).
+
+    /// Custom artwork key (e.g. "bed", "tv", "toilet"), or nil if this object's
+    /// `imageAssetName` is not an artwork key. Stored as `"art:<key>"`.
+    var artworkKey: String? {
+        guard let name = imageAssetName, name.hasPrefix("art:") else { return nil }
+        return String(name.dropFirst("art:".count))
+    }
+
+    /// SF Symbol name stored on the object (legacy seed format).
+    /// Stored as `"sfsymbol:<name>"`. Kept for backward compatibility with
+    /// scenes saved before the V2 noun-only seed.
     var systemImageName: String? {
-        // Stored as a special imageAssetName prefix: "sfsymbol:<name>"
         guard let name = imageAssetName, name.hasPrefix("sfsymbol:") else { return nil }
         return String(name.dropFirst("sfsymbol:".count))
     }
 
+    /// Returns a copy of this object with the given SF Symbol attached
+    /// (legacy helper kept for HomeStarter).
     func withSystemImageName(_ name: String) -> SceneObject {
         var copy = self
         copy.imageAssetName = "sfsymbol:\(name)"

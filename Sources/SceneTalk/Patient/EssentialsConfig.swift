@@ -75,7 +75,7 @@ struct EssentialsConfig: Codable, Sendable {
                 EssentialItem(label: "Help",     ttsText: "I need help",       systemImageName: "hand.raised.fill"),
                 EssentialItem(label: "Nurse",    ttsText: "Please call the nurse", systemImageName: "stethoscope"),
                 EssentialItem(label: "Water",    ttsText: "I need water",      systemImageName: "drop.fill"),
-                EssentialItem(label: "Bathroom", ttsText: "I need the bathroom", systemImageName: "figure.walk"),
+                EssentialItem(label: "Bathroom", ttsText: "I need the bathroom", systemImageName: "toilet.fill"),
                 EssentialItem(label: "Cold",     ttsText: "I am cold",         systemImageName: "thermometer.snowflake"),
                 EssentialItem(label: "Hot",      ttsText: "I am hot",          systemImageName: "thermometer.sun.fill"),
             ]
@@ -87,7 +87,7 @@ struct EssentialsConfig: Codable, Sendable {
                 EssentialItem(label: "Ayuda",    ttsText: "Necesito ayuda",    systemImageName: "hand.raised.fill"),
                 EssentialItem(label: "Enfermera", ttsText: "Por favor llame a la enfermera", systemImageName: "stethoscope"),
                 EssentialItem(label: "Agua",     ttsText: "Necesito agua",     systemImageName: "drop.fill"),
-                EssentialItem(label: "Baño",     ttsText: "Necesito el baño",  systemImageName: "figure.walk"),
+                EssentialItem(label: "Baño",     ttsText: "Necesito el baño",  systemImageName: "toilet.fill"),
                 EssentialItem(label: "Frío",     ttsText: "Tengo frío",        systemImageName: "thermometer.snowflake"),
                 EssentialItem(label: "Calor",    ttsText: "Tengo calor",       systemImageName: "thermometer.sun.fill"),
             ]

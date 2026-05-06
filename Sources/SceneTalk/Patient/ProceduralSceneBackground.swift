@@ -36,16 +36,20 @@ struct ProceduralSceneBackgroundView: View {
     }
 
     // MARK: - Hospital Room
-    // Cool clinical palette: soft blue-white walls, pale grey floor, warm window glow
+    // Cool clinical palette: soft blue-white walls, beige tile floor with grout
+    // grid, baseboard, and faint curtain rod hint along the upper edge.
+    // The bed and other props are real SceneObjects placed on top — not painted
+    // into the background.
 
     private var hospitalBackground: some View {
         GeometryReader { geo in
             let w = geo.size.width
             let h = geo.size.height
             let floorY = h * 0.65
+            let baseboardThickness: CGFloat = max(2, h * 0.012)
 
             ZStack {
-                // Wall gradient — ceiling (white) to wall (pale teal-blue)
+                // ── Wall gradient (ceiling → wall)
                 LinearGradient(
                     stops: [
                         .init(color: Color(red: 0.96, green: 0.97, blue: 0.99), location: 0.0),
@@ -55,10 +59,10 @@ struct ProceduralSceneBackgroundView: View {
                     startPoint: .top, endPoint: .bottom
                 )
 
-                // Window glow — upper right
+                // ── Soft warm window glow (upper-right wall)
                 RadialGradient(
                     colors: [
-                        Color.white.opacity(0.55),
+                        Color.white.opacity(0.45),
                         Color.white.opacity(0.0),
                     ],
                     center: UnitPoint(x: 0.82, y: 0.12),
@@ -66,62 +70,79 @@ struct ProceduralSceneBackgroundView: View {
                     endRadius: w * 0.35
                 )
 
-                // Floor line (baseboard)
+                // ── Curtain rod hint along the upper edge
                 Path { p in
-                    p.move(to: CGPoint(x: 0, y: floorY))
-                    p.addLine(to: CGPoint(x: w, y: floorY))
+                    p.move(to: CGPoint(x: w * 0.03, y: h * 0.04))
+                    p.addLine(to: CGPoint(x: w * 0.97, y: h * 0.04))
                 }
-                .stroke(Color(red: 0.72, green: 0.78, blue: 0.82).opacity(0.6), lineWidth: 1.5)
+                .stroke(Color(red: 0.62, green: 0.66, blue: 0.72).opacity(0.55),
+                        style: StrokeStyle(lineWidth: max(1, h * 0.005), lineCap: .round))
 
-                // Floor — slightly warmer, darker
+                // Curtain rod end-caps
+                Circle()
+                    .fill(Color(red: 0.55, green: 0.58, blue: 0.62))
+                    .frame(width: max(3, h * 0.012), height: max(3, h * 0.012))
+                    .position(x: w * 0.03, y: h * 0.04)
+                Circle()
+                    .fill(Color(red: 0.55, green: 0.58, blue: 0.62))
+                    .frame(width: max(3, h * 0.012), height: max(3, h * 0.012))
+                    .position(x: w * 0.97, y: h * 0.04)
+
+                // ── Floor (warm beige)
                 LinearGradient(
                     colors: [
-                        Color(red: 0.86, green: 0.86, blue: 0.82),
-                        Color(red: 0.78, green: 0.78, blue: 0.74),
+                        Color(red: 0.90, green: 0.86, blue: 0.78),
+                        Color(red: 0.82, green: 0.78, blue: 0.70),
                     ],
                     startPoint: .top, endPoint: .bottom
                 )
                 .frame(height: h - floorY)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
 
-                // Bed silhouette — center, slightly below midline
-                bedSilhouette(in: geo)
+                // ── Floor tile grid (subtle grout lines)
+                tileGrid(width: w, height: h, floorY: floorY)
+
+                // ── Baseboard at wall/floor seam
+                Rectangle()
+                    .fill(Color(red: 0.66, green: 0.62, blue: 0.55))
+                    .frame(height: baseboardThickness)
+                    .position(x: w / 2, y: floorY + baseboardThickness / 2)
             }
             .clipped()
         }
     }
 
-    private func bedSilhouette(in geo: GeometryProxy) -> some View {
-        let w = geo.size.width
-        let h = geo.size.height
-        let bedW = w * 0.45
-        let bedH = h * 0.28
-        let bedX = (w - bedW) / 2
-        let bedY = h * 0.42
+    /// Subtle floor-tile grout lines giving the floor a sense of depth.
+    /// Lines fade out toward the horizon (top of floor).
+    private func tileGrid(width w: CGFloat, height h: CGFloat, floorY: CGFloat) -> some View {
+        let floorH = h - floorY
 
         return ZStack {
-            // Mattress
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color(red: 0.95, green: 0.96, blue: 0.98))
-                .frame(width: bedW, height: bedH)
-                .position(x: bedX + bedW / 2, y: bedY + bedH / 2)
-
-            // Bedsheet lines (suggestion)
-            ForEach([0.3, 0.6], id: \.self) { fraction in
+            // Horizontal grout lines — receding toward the wall
+            ForEach(0..<5, id: \.self) { i in
+                let fraction = CGFloat(i + 1) / 5.0
+                let y = floorY + floorH * fraction
+                let opacity = 0.18 + (fraction * 0.18)   // fade-in toward foreground
                 Path { p in
-                    let x = bedX
-                    let y = bedY + bedH * fraction
-                    p.move(to: CGPoint(x: x, y: y))
-                    p.addLine(to: CGPoint(x: x + bedW, y: y))
+                    p.move(to: CGPoint(x: 0, y: y))
+                    p.addLine(to: CGPoint(x: w, y: y))
                 }
-                .stroke(Color(red: 0.82, green: 0.88, blue: 0.93).opacity(0.7), lineWidth: 1)
+                .stroke(Color(red: 0.55, green: 0.50, blue: 0.40).opacity(opacity),
+                        lineWidth: 1)
             }
 
-            // Headboard
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color(red: 0.70, green: 0.78, blue: 0.85))
-                .frame(width: bedH * 0.18, height: bedH)
-                .position(x: bedX + bedH * 0.09, y: bedY + bedH / 2)
+            // Vertical grout lines — converging slightly to suggest perspective
+            ForEach(0..<6, id: \.self) { i in
+                let fraction = CGFloat(i) / 5.0
+                let xBottom = w * fraction
+                let xTop = w * 0.10 + (w * 0.80) * fraction
+                Path { p in
+                    p.move(to: CGPoint(x: xTop, y: floorY))
+                    p.addLine(to: CGPoint(x: xBottom, y: h))
+                }
+                .stroke(Color(red: 0.55, green: 0.50, blue: 0.40).opacity(0.22),
+                        lineWidth: 1)
+            }
         }
     }
 

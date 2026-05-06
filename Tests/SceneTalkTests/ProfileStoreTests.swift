@@ -88,6 +88,25 @@ final class ProfileStoreTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: fileURL), audioData)
     }
 
+    // MARK: - deleteBackgroundAsset
+
+    func test_deleteBackgroundAsset_removesFile() throws {
+        let profileId = UUID()
+        let sceneId = UUID()
+        // Write a background JPEG using the public saveBackground helper
+        let assetName = try store.saveBackground(makeTinyPNG(), profileId: profileId, sceneId: sceneId)
+        XCTAssertNotNil(store.assetURL(forRelativePath: assetName), "precondition: file should exist after save")
+
+        store.deleteBackgroundAsset(profileId: profileId, sceneId: sceneId)
+
+        XCTAssertNil(store.assetURL(forRelativePath: assetName), "file should be gone after delete")
+    }
+
+    func test_deleteBackgroundAsset_isNoOp_whenFileMissing() {
+        // Should not crash or throw when there's nothing to delete
+        store.deleteBackgroundAsset(profileId: UUID(), sceneId: UUID())
+    }
+
     // MARK: - assetURL
 
     func test_assetURL_returnsURL_whenFileExists() throws {

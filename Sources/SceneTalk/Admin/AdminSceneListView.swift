@@ -19,12 +19,18 @@ struct AdminSceneListView: View {
     /// Called when a new object is created inside the scene editor so the
     /// caller can persist it to the object library.
     let onObjectAdded: ((SceneObject) -> Void)?
+    /// Called when a scene is deleted so the caller can clean up the orphaned
+    /// background asset on disk. The view itself handles removing the scene
+    /// from the `scenes` binding.
+    let onSceneDeleted: ((SceneTalkScene) -> Void)?
 
     /// Drive navigation by scene UUID (Hashable).
     @State private var navigationTarget: UUID?
     /// Newly-created scenes that haven't been flushed to store.scenes yet.
     /// Keyed by scene ID so the navigationDestination lookup never misses them.
     @State private var pendingScenes: [UUID: SceneTalkScene] = [:]
+    /// Scene awaiting delete confirmation — drives the .alert binding.
+    @State private var sceneToDelete: SceneTalkScene?
 
     private let columns = [
         GridItem(.adaptive(minimum: 220, maximum: 320), spacing: 20)
@@ -41,6 +47,13 @@ struct AdminSceneListView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(scene.label), edit scene")
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            sceneToDelete = scene
+                        } label: {
+                            Label(String(localized: "Delete Scene"), systemImage: "trash")
+                        }
+                    }
                 }
 
                 Button {
@@ -61,6 +74,29 @@ struct AdminSceneListView: View {
                 .accessibilityLabel(String(localized: "Add new scene"))
             }
             .padding(20)
+        }
+        .alert(
+            String(localized: "Delete \"\(sceneToDelete?.name ?? "")\"?"),
+            isPresented: Binding(
+                get: { sceneToDelete != nil },
+                set: { if !$0 { sceneToDelete = nil } }
+            )
+        ) {
+            Button(String(localized: "Delete"), role: .destructive) {
+                if let scene = sceneToDelete {
+                    onSceneDeleted?(scene)
+                    var current = scenes
+                    current.removeAll { $0.id == scene.id }
+                    scenes = current        // single authoritative save via binding setter
+                    pendingScenes.removeValue(forKey: scene.id)
+                }
+                sceneToDelete = nil
+            }
+            Button(String(localized: "Cancel"), role: .cancel) {
+                sceneToDelete = nil
+            }
+        } message: {
+            Text(String(localized: "This cannot be undone."))
         }
         .navigationDestination(item: $navigationTarget) { sceneId in
             // Check store.scenes first; fall back to pendingScenes so newly-

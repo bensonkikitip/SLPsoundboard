@@ -85,9 +85,11 @@ private struct EssentialButton: View {
                 Image(systemName: item.systemImageName)
                     .imageScale(.large)
                     .font(.system(size: size * 0.35))
+                    .foregroundStyle(item.tintColor.color)
                     .frame(width: size * 0.6, height: size * 0.5)
                 Text(item.label)
-                    .font(.caption.weight(.medium))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(item.tintColor.color)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
                     .frame(width: size - 8)
@@ -95,7 +97,13 @@ private struct EssentialButton: View {
             .frame(width: size, height: size)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isPressed ? Color.accentColor.opacity(0.3) : Color.secondary.opacity(0.15))
+                    .fill(isPressed
+                        ? item.tintColor.color.opacity(0.35)
+                        : item.tintColor.color.opacity(0.12))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(item.tintColor.color.opacity(0.25), lineWidth: 1)
             )
         }
         .buttonStyle(.plain)

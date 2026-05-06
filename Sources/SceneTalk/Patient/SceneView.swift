@@ -21,6 +21,11 @@ struct SceneView: View {
                 // Background
                 background(in: geo)
 
+                // Hotspot regions (below object placements so objects stay on top)
+                ForEach(scene.hotspots) { hotspot in
+                    hotspotView(hotspot: hotspot, size: geo.size)
+                }
+
                 // Placements (sorted by zIndex)
                 ForEach(scene.placements.sorted(by: { $0.zIndex < $1.zIndex })) { placement in
                     if let obj = objects.first(where: { $0.id == placement.objectId }) {
@@ -91,6 +96,61 @@ struct SceneView: View {
             handleTap(object: object)
         }
         .position(x: x + w / 2, y: y + h / 2)
+    }
+
+    // MARK: - Hotspot view
+
+    private func hotspotView(hotspot: SceneHotspot, size: CGSize) -> some View {
+        let x = hotspot.x * size.width
+        let y = hotspot.y * size.height
+        let w = hotspot.width * size.width
+        let h = hotspot.height * size.height
+
+        return Button {
+            handleHotspotTap(hotspot: hotspot)
+        } label: {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.white.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(Color.white.opacity(0.25), lineWidth: 1)
+                    )
+                Text(hotspot.label)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.5), radius: 2)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .padding(4)
+            }
+            .frame(width: w, height: h)
+        }
+        .buttonStyle(.plain)
+        .position(x: x + w / 2, y: y + h / 2)
+        .accessibilityLabel(hotspot.label)
+        .accessibilityHint(String(localized: "Tap to speak: \(hotspot.ttsText)"))
+    }
+
+    private func handleHotspotTap(hotspot: SceneHotspot) {
+        withAnimation {
+            lastTappedLabel = hotspot.label
+        }
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        // Synthesise a temporary SceneObject so AudioService's existing play(object:language:)
+        // handles both recorded audio and TTS fallback — same pattern as EssentialsBar.
+        let obj = SceneObject(
+            profileId: UUID(),
+            label: hotspot.label,
+            kind: .phraseIntent,
+            audioAssetName: hotspot.audioAssetName,
+            ttsOverride: hotspot.ttsOverride
+        )
+        Task { await audioService.play(object: obj, language: language) }
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            withAnimation { lastTappedLabel = nil }
+        }
     }
 
     // MARK: - Label flash

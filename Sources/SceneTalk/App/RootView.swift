@@ -11,8 +11,6 @@ struct RootView: View {
     @State private var store = ProfileStore()
     @State private var appMode = AppModeState()
     @State private var showPINEntry = false
-    @State private var showAdminSettings = false
-    @State private var showObjectLibrary = false
 
     /// Raw PIN captured during wizard — held in memory only, never written to disk as plaintext.
     @State private var sessionPIN: String = ""
@@ -50,16 +48,22 @@ struct RootView: View {
 
     // MARK: - Profile loaded
 
+    @ViewBuilder
     private var profileLoaded: some View {
-        Group {
-            if let profile = store.profile {
-                switch appMode.mode {
-                case .patient: AnyView(patientShell(profile: profile))
-                case .admin:   AnyView(adminShell(profile: profile))
-                }
-            } else {
-                EmptyView()
+        if let profile = store.profile {
+            switch appMode.mode {
+            case .patient:
+                patientShell(profile: profile)
+            case .admin:
+                AdminShellView(
+                    profile: profile,
+                    store: store,
+                    appMode: appMode,
+                    sessionPIN: sessionPIN
+                )
             }
+        } else {
+            EmptyView()
         }
     }
 
@@ -85,14 +89,41 @@ struct RootView: View {
             .presentationDetents([.large])
         }
     }
+}
 
-    // MARK: - Admin shell
+// MARK: - Admin shell
+//
+// Extracted from RootView so its `library` (and other admin-only state) lives
+// in `@State` with stable identity across re-renders. Previously, building the
+// library inside a method on RootView caused a fresh ObjectLibrary instance on
+// every render, which made newly-added objects vanish from the UI before the
+// async `saveObjects` task completed.
 
-    private func adminShell(profile: Profile) -> some View {
-        let library = ObjectLibrary(profileId: profile.id, objects: store.objects)
+private struct AdminShellView: View {
+
+    let profile: Profile
+    let store: ProfileStore
+    let appMode: AppModeState
+    let sessionPIN: String
+
+    @State private var library: ObjectLibrary
+    @State private var showAdminSettings = false
+    @State private var showObjectLibrary = false
+
+    init(profile: Profile, store: ProfileStore, appMode: AppModeState, sessionPIN: String) {
+        self.profile = profile
+        self.store = store
+        self.appMode = appMode
+        self.sessionPIN = sessionPIN
+        // Seed the library once from store.objects; subsequent renders reuse this instance.
+        self._library = State(initialValue: ObjectLibrary(profileId: profile.id, objects: store.objects))
+    }
+
+    var body: some View {
         let scenesBinding = Binding<[SceneTalkScene]>(
             get: { store.scenes },
             set: { newValue in
+                store.updateScenesInMemory(newValue)   // synchronous — triggers immediate re-render
                 Task { try? await store.saveScenes(newValue, pin: sessionPIN) }
             }
         )
@@ -117,6 +148,9 @@ struct RootView: View {
                 onObjectAdded: { obj in
                     library.add(obj)
                     Task { try? await store.saveObjects(library.objects, pin: sessionPIN) }
+                },
+                onSceneDeleted: { scene in
+                    store.deleteBackgroundAsset(profileId: profile.id, sceneId: scene.id)
                 }
             )
             .navigationTitle(String(localized: "Scenes"))
@@ -179,7 +213,6 @@ struct RootView: View {
             }
         }
     }
-
 }
 
 #Preview {

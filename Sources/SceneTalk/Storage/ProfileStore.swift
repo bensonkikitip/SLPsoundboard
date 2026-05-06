@@ -104,6 +104,13 @@ final class ProfileStore {
         self.objects = updatedObjects
     }
 
+    /// Synchronously update the in-memory scene list without touching disk.
+    /// Call this first for an instant UI refresh, then follow with `saveScenes`
+    /// (async) for persistence.
+    func updateScenesInMemory(_ updatedScenes: [SceneTalkScene]) {
+        self.scenes = updatedScenes
+    }
+
     /// Persist an updated scene list for the active profile.
     func saveScenes(_ updatedScenes: [SceneTalkScene], pin: String) async throws {
         guard let profile else { return }
@@ -172,6 +179,17 @@ final class ProfileStore {
     func assetURL(forRelativePath path: String) -> URL? {
         let url = dataDirectory.appendingPathComponent(path)
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
+    /// Delete the background JPEG associated with a scene. Used when a scene is
+    /// removed from the admin grid so the file doesn't orphan on disk. Silent
+    /// on failure (file may not exist for scenes that never had a custom background).
+    func deleteBackgroundAsset(profileId: UUID, sceneId: UUID) {
+        let url = dataDirectory
+            .appendingPathComponent(profileId.uuidString)
+            .appendingPathComponent("backgrounds")
+            .appendingPathComponent("\(sceneId.uuidString).jpg")
+        try? FileManager.default.removeItem(at: url)
     }
 
     // MARK: - Clear (for tests / profile deletion)

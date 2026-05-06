@@ -26,6 +26,16 @@ struct SceneEditorView: View {
     @State private var bgPhotoItem: PhotosPickerItem?
     @State private var bgImageData: Data?
 
+    // MARK: - Hotspot state
+
+    private enum EditorMode { case placements, addingHotspot }
+    @State private var editorMode: EditorMode = .placements
+    @State private var drawingStart: CGPoint? = nil
+    @State private var drawingCurrent: CGPoint? = nil
+    @State private var pendingHotspotRect: CGRect? = nil   // normalised 0…1
+    @State private var showHotspotEditor = false
+    @State private var editingHotspot: SceneHotspot? = nil
+
     init(
         scene: SceneTalkScene,
         availableObjects: [SceneObject],
@@ -90,6 +100,20 @@ struct SceneEditorView: View {
 
                 Spacer()
 
+                // Toggle hotspot-draw mode
+                Button {
+                    editorMode = editorMode == .addingHotspot ? .placements : .addingHotspot
+                    selectedPlacementID = nil
+                } label: {
+                    Label(String(localized: "Add Region"), systemImage: "rectangle.dashed")
+                }
+                .foregroundStyle(editorMode == .addingHotspot ? Color.teal : Color.primary)
+                .accessibilityLabel(editorMode == .addingHotspot
+                    ? String(localized: "Cancel adding region")
+                    : String(localized: "Add hotspot region"))
+
+                Spacer()
+
                 // Add object — opens library; "New Object" lives at the bottom of the sheet
                 Button {
                     showObjectPicker = true
@@ -124,6 +148,63 @@ struct SceneEditorView: View {
                 }
             )
         }
+        // Sheet: create a new hotspot from a drawn rect
+        .sheet(isPresented: $showHotspotEditor, onDismiss: { pendingHotspotRect = nil }) {
+            if let rect = pendingHotspotRect {
+                let newId = UUID()
+                HotspotEditorSheet(
+                    profileId: profileId,
+                    hotspotId: newId,
+                    sceneId: vm.sceneId,
+                    initialRect: rect,
+                    initialLabel: "",
+                    initialAudioAssetName: nil,
+                    saveAudio: saveAudio,
+                    onSave: { hotspot, audioData in
+                        var h = hotspot
+                        if let data = audioData,
+                           let path = try? saveAudio?(data, h.id) {
+                            h.audioAssetName = path
+                        }
+                        vm.addHotspot(h)
+                        showHotspotEditor = false
+                        pendingHotspotRect = nil
+                    },
+                    onDelete: nil,
+                    onCancel: {
+                        showHotspotEditor = false
+                        pendingHotspotRect = nil
+                    }
+                )
+            }
+        }
+        // Sheet: edit an existing hotspot
+        .sheet(item: $editingHotspot) { hotspot in
+            HotspotEditorSheet(
+                profileId: profileId,
+                hotspotId: hotspot.id,
+                sceneId: vm.sceneId,
+                initialRect: CGRect(x: hotspot.x, y: hotspot.y,
+                                    width: hotspot.width, height: hotspot.height),
+                initialLabel: hotspot.label,
+                initialAudioAssetName: hotspot.audioAssetName,
+                saveAudio: saveAudio,
+                onSave: { updated, audioData in
+                    var h = updated
+                    if let data = audioData,
+                       let path = try? saveAudio?(data, h.id) {
+                        h.audioAssetName = path
+                    }
+                    vm.updateHotspot(h)
+                    editingHotspot = nil
+                },
+                onDelete: {
+                    vm.deleteHotspot(id: hotspot.id)
+                    editingHotspot = nil
+                },
+                onCancel: { editingHotspot = nil }
+            )
+        }
         .onChange(of: bgPhotoItem) { _, item in
             Task {
                 guard let data = try? await item?.loadTransferable(type: Data.self) else { return }
@@ -143,13 +224,134 @@ struct SceneEditorView: View {
         ZStack {
             backgroundLayer
 
+            hotspotsLayer(size: size)
+
             placementsLayer(size: size)
 
-            Color.clear
-                .contentShape(Rectangle())
-                .onTapGesture { selectedPlacementID = nil }
-                .zIndex(-1)
+            if editorMode == .addingHotspot {
+                drawGestureOverlay(size: size)
+            } else {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { selectedPlacementID = nil }
+                    .zIndex(-1)
+            }
         }
+    }
+
+    // MARK: - Hotspot layer (editor)
+
+    private func hotspotsLayer(size: CGSize) -> some View {
+        ForEach(vm.hotspots) { hotspot in
+            editableHotspotView(hotspot: hotspot, size: size)
+        }
+    }
+
+    private func editableHotspotView(hotspot: SceneHotspot, size: CGSize) -> some View {
+        let x = hotspot.x * size.width
+        let y = hotspot.y * size.height
+        let w = hotspot.width * size.width
+        let h = hotspot.height * size.height
+
+        return Button {
+            editingHotspot = hotspot
+        } label: {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.teal.opacity(0.18))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(Color.teal.opacity(0.75), lineWidth: 1.5)
+                    )
+                VStack(spacing: 2) {
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.teal)
+                    Text(hotspot.label)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.teal)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 4)
+                }
+            }
+            .frame(width: w, height: h)
+        }
+        .buttonStyle(.plain)
+        .position(x: x + w / 2, y: y + h / 2)
+        .accessibilityLabel("\(hotspot.label), tap to edit region")
+    }
+
+    // MARK: - Draw-gesture overlay
+
+    private func drawGestureOverlay(size: CGSize) -> some View {
+        ZStack {
+            // Semi-transparent instruction tint
+            Color.teal.opacity(0.06)
+                .ignoresSafeArea()
+                .overlay(
+                    Text(String(localized: "Drag to draw a region"))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.teal)
+                        .padding(8)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                        .padding(.top, 8),
+                    alignment: .top
+                )
+
+            // Live preview rect while dragging
+            if let start = drawingStart, let current = drawingCurrent {
+                let screenRect = screenRect(from: start, to: current)
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.teal.opacity(0.20))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .strokeBorder(Color.teal, lineWidth: 2)
+                    )
+                    .frame(width: screenRect.width, height: screenRect.height)
+                    .position(x: screenRect.midX, y: screenRect.midY)
+                    .allowsHitTesting(false)
+            }
+        }
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 5)
+                .onChanged { value in
+                    drawingStart = value.startLocation
+                    drawingCurrent = value.location
+                }
+                .onEnded { value in
+                    let normRect = normalizedRect(
+                        from: value.startLocation,
+                        to: value.location,
+                        in: size
+                    )
+                    drawingStart = nil
+                    drawingCurrent = nil
+                    editorMode = .placements
+                    pendingHotspotRect = normRect
+                    showHotspotEditor = true
+                }
+        )
+    }
+
+    // MARK: - Geometry helpers
+
+    private func normalizedRect(from a: CGPoint, to b: CGPoint, in size: CGSize) -> CGRect {
+        let x = min(a.x, b.x) / size.width
+        let y = min(a.y, b.y) / size.height
+        let w = abs(b.x - a.x) / size.width
+        let h = abs(b.y - a.y) / size.height
+        return CGRect(x: x, y: y, width: max(w, 0.04), height: max(h, 0.04))
+    }
+
+    private func screenRect(from a: CGPoint, to b: CGPoint) -> CGRect {
+        CGRect(
+            x: min(a.x, b.x),
+            y: min(a.y, b.y),
+            width: abs(b.x - a.x),
+            height: abs(b.y - a.y)
+        )
     }
 
     private func placementsLayer(size: CGSize) -> some View {

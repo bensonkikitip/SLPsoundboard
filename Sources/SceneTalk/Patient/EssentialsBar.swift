@@ -103,7 +103,7 @@ private struct EssentialButton: View {
                 .onEnded { _ in isPressed = false }
         )
         .accessibilityLabel(item.label)
-        .accessibilityHint("Tap to speak: \(item.ttsText)")
+        .accessibilityHint(String(localized: "Tap to speak: \(item.ttsText)"))
     }
 
     private func speak() {

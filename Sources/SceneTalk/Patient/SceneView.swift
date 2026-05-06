@@ -147,7 +147,7 @@ struct SceneView: View {
                     .padding(12)
                     .background(.ultraThinMaterial, in: Circle())
             }
-            .accessibilityLabel("Back to scene list")
+            .accessibilityLabel(String(localized: "Back to scene list"))
             .padding(16)
 
             Spacer()
@@ -158,7 +158,7 @@ struct SceneView: View {
                     .padding(12)
                     .background(.ultraThinMaterial, in: Circle())
             }
-            .accessibilityLabel("Admin access")
+            .accessibilityLabel(String(localized: "Admin access"))
             .padding(16)
         }
     }
@@ -226,7 +226,7 @@ private struct ObjectTileView: View {
                 .onEnded { _ in isPressed = false }
         )
         .accessibilityLabel(object.label)
-        .accessibilityHint("Tap to speak: \(object.ttsText)")
+        .accessibilityHint(String(localized: "Tap to speak: \(object.ttsText)"))
     }
 
     @ViewBuilder

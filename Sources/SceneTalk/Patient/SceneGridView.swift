@@ -91,7 +91,7 @@ struct SceneGridView: View {
                 .padding(14)
                 .background(.ultraThinMaterial, in: Circle())
         }
-        .accessibilityLabel("Admin access")
+        .accessibilityLabel(String(localized: "Admin access"))
         .padding(16)
     }
 }

@@ -27,8 +27,15 @@ final class SceneEditorViewModel {
 
     /// Add a newly-authored object to the available set, then immediately place it.
     func addObject(_ object: SceneObject, at point: CGPoint = CGPoint(x: 0.5, y: 0.45)) {
-        availableObjects.append(object)
+        registerObject(object)
         addPlacement(for: object, at: point)
+    }
+
+    /// Register an object in the available set without placing it.
+    /// Call this before `addPlacement` when placement is handled separately.
+    func registerObject(_ object: SceneObject) {
+        guard !availableObjects.contains(where: { $0.id == object.id }) else { return }
+        availableObjects.append(object)
     }
 
     // MARK: - Placement CRUD

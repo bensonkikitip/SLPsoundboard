@@ -4,6 +4,10 @@ import PhotosUI
 /// Admin-mode drag-and-drop scene editor.
 /// Family picks a background photo, then taps objects from the library to place them.
 /// Drag to reposition; tap-to-select shows a resize handle + delete button.
+///
+/// NOTE: This view must be pushed via NavigationStack (navigationDestination).
+/// It does NOT wrap itself in NavigationStack — it relies on the parent stack
+/// for its navigation bar and dismiss action.
 struct SceneEditorView: View {
 
     @State private var vm: SceneEditorViewModel
@@ -17,7 +21,6 @@ struct SceneEditorView: View {
 
     @State private var selectedPlacementID: UUID?
     @State private var showObjectPicker = false
-    @State private var showNewObjectPipeline = false
     @State private var showRenameAlert = false
     @State private var pendingName = ""
     @State private var bgPhotoItem: PhotosPickerItem?
@@ -43,106 +46,91 @@ struct SceneEditorView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            GeometryReader { geo in
-                canvasLayer(size: geo.size)
+        GeometryReader { geo in
+            canvasLayer(size: geo.size)
+        }
+        .ignoresSafeArea(edges: .bottom)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(String(localized: "Cancel")) { dismiss() }
             }
-            .ignoresSafeArea(edges: .bottom)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button(String(localized: "Cancel")) { dismiss() }
-                }
-                // Tappable title — tap to rename
-                ToolbarItem(placement: .principal) {
-                    Button {
-                        pendingName = vm.sceneName
-                        showRenameAlert = true
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text(vm.sceneName)
-                                .font(.headline)
-                            Image(systemName: "pencil")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .foregroundStyle(.primary)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(String(localized: "Save")) {
-                        onSave(vm.buildScene())
-                        dismiss()
-                    }
-                    .fontWeight(.semibold)
-                }
-                ToolbarItemGroup(placement: .bottomBar) {
-                    // Change background
-                    PhotosPicker(selection: $bgPhotoItem, matching: .images) {
-                        Label(String(localized: "Background"), systemImage: "photo")
-                    }
 
-                    Spacer()
-
-                    // Add object — menu with "From Library" + optional "New Object"
-                    Menu {
-                        Button {
-                            showObjectPicker = true
-                        } label: {
-                            Label(String(localized: "From Library"), systemImage: "books.vertical")
-                        }
-                        if saveCutout != nil {
-                            Button {
-                                showNewObjectPipeline = true
-                            } label: {
-                                Label(String(localized: "New Object…"), systemImage: "camera")
-                            }
-                        }
-                    } label: {
-                        Label(String(localized: "Add Object"), systemImage: "plus.circle.fill")
+            // Tappable title — tap to rename
+            ToolbarItem(placement: .principal) {
+                Button {
+                    pendingName = vm.sceneName
+                    showRenameAlert = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(vm.sceneName)
                             .font(.headline)
+                        Image(systemName: "pencil")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
+                .foregroundStyle(.primary)
             }
-            .alert(String(localized: "Rename Scene"), isPresented: $showRenameAlert) {
-                TextField(String(localized: "Scene name"), text: $pendingName)
-                Button(String(localized: "Rename")) {
-                    let trimmed = pendingName.trimmingCharacters(in: .whitespaces)
-                    if !trimmed.isEmpty { vm.sceneName = trimmed }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(String(localized: "Save")) {
+                    onSave(vm.buildScene())
+                    dismiss()
                 }
-                Button(String(localized: "Cancel"), role: .cancel) { }
+                .fontWeight(.semibold)
             }
-            .sheet(isPresented: $showObjectPicker) {
-                ObjectPickerSheet(objects: vm.availableObjects) { obj in
+
+            ToolbarItemGroup(placement: .bottomBar) {
+                // Change background
+                PhotosPicker(selection: $bgPhotoItem, matching: .images) {
+                    Label(String(localized: "Background"), systemImage: "photo")
+                }
+
+                Spacer()
+
+                // Add object — opens library; "New Object" lives at the bottom of the sheet
+                Button {
+                    showObjectPicker = true
+                } label: {
+                    Label(String(localized: "Add Object"), systemImage: "plus.circle.fill")
+                        .font(.headline)
+                }
+            }
+        }
+        .alert(String(localized: "Rename Scene"), isPresented: $showRenameAlert) {
+            TextField(String(localized: "Scene name"), text: $pendingName)
+            Button(String(localized: "Rename")) {
+                let trimmed = pendingName.trimmingCharacters(in: .whitespaces)
+                if !trimmed.isEmpty { vm.sceneName = trimmed }
+            }
+            Button(String(localized: "Cancel"), role: .cancel) { }
+        }
+        .sheet(isPresented: $showObjectPicker) {
+            ObjectPickerSheet(
+                objects: vm.availableObjects,
+                profileId: profileId,
+                saveCutout: saveCutout,
+                saveAudio: saveAudio,
+                onSelect: { obj in
                     vm.addPlacement(for: obj, at: CGPoint(x: 0.5, y: 0.45))
+                },
+                onNewObject: { obj in
+                    // Register in the VM's available set so placement renders immediately,
+                    // then persist to the object library via the caller.
+                    vm.registerObject(obj)
+                    onObjectAdded?(obj)
                 }
-            }
-            .sheet(isPresented: $showNewObjectPipeline) {
-                if let saveCutout, let saveAudio {
-                    CutoutPipelineView(profileId: profileId, existingObject: nil) { newObj, imageData, audioData in
-                        var saved = newObj
-                        if let data = imageData,
-                           let path = try? saveCutout(data, saved.id) {
-                            saved.imageAssetName = path
-                        }
-                        if let data = audioData,
-                           let path = try? saveAudio(data, saved.id) {
-                            saved.audioAssetName = path
-                        }
-                        onObjectAdded?(saved)
-                        vm.addObject(saved)
-                    }
-                }
-            }
-            .onChange(of: bgPhotoItem) { _, item in
-                Task {
-                    guard let data = try? await item?.loadTransferable(type: Data.self) else { return }
-                    bgImageData = data
-                    // Persist to disk so the path survives Save
-                    if let saveBackground,
-                       let path = try? saveBackground(data, vm.sceneId) {
-                        vm.backgroundAssetName = path
-                    }
+            )
+        }
+        .onChange(of: bgPhotoItem) { _, item in
+            Task {
+                guard let data = try? await item?.loadTransferable(type: Data.self) else { return }
+                bgImageData = data
+                // Persist to disk so the path survives Save
+                if let saveBackground,
+                   let path = try? saveBackground(data, vm.sceneId) {
+                    vm.backgroundAssetName = path
                 }
             }
         }
@@ -294,7 +282,6 @@ private struct EditablePlacementView: View {
         VStack(spacing: 2) {
             Group {
                 if object.artworkKey != nil {
-                    // SwiftUI-drawn artwork (seeded props like bed, tv, etc.)
                     SceneObjectArtworkView(object: object, width: liveW * 0.75, height: liveH * 0.65)
                 } else if let assetName = object.imageAssetName,
                           !assetName.hasPrefix("art:"),
@@ -303,23 +290,17 @@ private struct EditablePlacementView: View {
                             .urls(for: .documentDirectory, in: .userDomainMask)
                             .first?.appendingPathComponent(assetName),
                           let uiImage = UIImage(contentsOfFile: url.path) {
-                    // User-authored cutout PNG
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: liveW * 0.75, height: liveH * 0.65)
                 } else if let sfName = object.systemImageName {
-                    // Legacy SF symbol object
                     Image(systemName: sfName)
                         .font(.system(size: liveW * 0.30))
                         .foregroundStyle(.white.opacity(0.9))
-                        .frame(width: liveW * 0.75, height: liveH * 0.65)
                 } else {
-                    // Neutral placeholder
                     Image(systemName: object.kind == .phraseIntent ? "bubble.left.fill" : "photo")
                         .font(.system(size: liveW * 0.28))
                         .foregroundStyle(.white.opacity(0.9))
-                        .frame(width: liveW * 0.75, height: liveH * 0.65)
                 }
             }
             .frame(width: liveW * 0.75, height: liveH * 0.65)
@@ -366,7 +347,6 @@ private struct EditablePlacementView: View {
                         state = value.translation
                     }
                     .onEnded { value in
-                        // Convert pixel delta → normalised delta for the VM
                         let dw = value.translation.width / containerSize.width
                         let dh = value.translation.height / containerSize.height
                         onResize(CGSize(width: dw, height: dh))
@@ -378,25 +358,48 @@ private struct EditablePlacementView: View {
 
 // MARK: - Object picker sheet
 
+/// Sheet shown when the user taps "Add Object" in the scene editor.
+/// Lists existing library objects; scrolling to the bottom reveals "New Object…"
+/// A + button in the top-right also launches the creation pipeline directly.
 private struct ObjectPickerSheet: View {
 
     let objects: [SceneObject]
+    let profileId: UUID
+    let saveCutout: ((Data, UUID) throws -> String)?
+    let saveAudio: ((Data, UUID) throws -> String)?
+    /// Called to place an object in the scene (existing or newly created).
     let onSelect: (SceneObject) -> Void
+    /// Called only for newly created objects — register in the VM + persist to library.
+    let onNewObject: ((SceneObject) -> Void)?
+
     @Environment(\.dismiss) private var dismiss
+    @State private var showPipeline = false
 
     var body: some View {
         NavigationStack {
-            List(objects) { obj in
-                HStack(spacing: 12) {
-                    ObjectThumbnailView(object: obj)
-                        .frame(width: 44, height: 44)
-                    Text(obj.label)
-                        .font(.body)
+            List {
+                ForEach(objects) { obj in
+                    HStack(spacing: 12) {
+                        ObjectThumbnailView(object: obj)
+                            .frame(width: 44, height: 44)
+                        Text(obj.label)
+                            .font(.body)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        onSelect(obj)
+                        dismiss()
+                    }
                 }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    onSelect(obj)
-                    dismiss()
+
+                // "New Object…" at the bottom of the list so it's reachable by scrolling
+                if saveCutout != nil {
+                    Button {
+                        showPipeline = true
+                    } label: {
+                        Label(String(localized: "New Object…"), systemImage: "camera")
+                            .foregroundStyle(.tint)
+                    }
                 }
             }
             .navigationTitle(String(localized: "Add Object to Scene"))
@@ -404,6 +407,35 @@ private struct ObjectPickerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(String(localized: "Cancel")) { dismiss() }
+                }
+                // Quick-access + button in the top-right
+                if saveCutout != nil {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            showPipeline = true
+                        } label: {
+                            Image(systemName: "plus")
+                        }
+                        .accessibilityLabel(String(localized: "New Object"))
+                    }
+                }
+            }
+            .sheet(isPresented: $showPipeline) {
+                if let saveCutout, let saveAudio {
+                    CutoutPipelineView(profileId: profileId, existingObject: nil) { newObj, imageData, audioData in
+                        var saved = newObj
+                        if let data = imageData,
+                           let path = try? saveCutout(data, saved.id) {
+                            saved.imageAssetName = path
+                        }
+                        if let data = audioData,
+                           let path = try? saveAudio(data, saved.id) {
+                            saved.audioAssetName = path
+                        }
+                        onNewObject?(saved)  // register + persist to library
+                        onSelect(saved)      // place in scene
+                        dismiss()
+                    }
                 }
             }
         }

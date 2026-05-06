@@ -93,4 +93,8 @@ struct Profile: Identifiable, Equatable, Codable, Sendable {
         let digest = SHA256.hash(data: data)
         return digest.map { String(format: "%02x", $0) }.joined()
     }
+
+    /// Public accessor for PIN hashing — used by `ProfileStore` for fast PIN
+    /// verification against the stored manifest hash without decrypting data.
+    static func hashPIN(_ pin: String) -> String { hash(pin: pin) }
 }

@@ -6,7 +6,9 @@ import SwiftUI
 struct WizardView: View {
 
     @State private var vm = WizardViewModel()
-    let onComplete: (Profile, HospitalStarter.SeedResult) -> Void
+    /// Called when the wizard finishes.  `pin` is the raw 4-digit PIN — callers
+    /// must hold it in memory only and never persist it in plaintext.
+    let onComplete: (Profile, String, HospitalStarter.SeedResult) async -> Void
 
     var body: some View {
         NavigationStack {
@@ -172,8 +174,9 @@ struct WizardView: View {
 
             Button {
                 let profile = vm.buildProfile()
+                let pin = vm.pinEntry   // raw PIN — held in-memory only
                 let seed = HospitalStarter.seed(profileId: profile.id, language: profile.language)
-                onComplete(profile, seed)
+                Task { await onComplete(profile, pin, seed) }
             } label: {
                 Text(String(localized: "Start using SceneTalk"))
                     .font(.headline)

@@ -2,46 +2,59 @@ import SwiftUI
 
 /// Entry point.  Routes based on whether a Profile exists and what mode is active.
 ///
-/// - No profile present → Setup wizard (WizardView)
-/// - Profile present + patient mode → Patient experience (SceneGridView)
-/// - Profile present + admin mode   → Admin experience (admin shell)
-/// - Lock icon in any patient view  → PINEntryView
+/// Launch states:
+/// - No profile manifest    → Setup wizard (WizardView)
+/// - Manifest found         → PIN unlock screen (PINUnlockView)
+/// - Profile loaded         → Patient experience OR Admin experience (PIN-gated)
 struct RootView: View {
 
+    @State private var store = ProfileStore()
     @State private var appMode = AppModeState()
     @State private var showPINEntry = false
     @State private var showAdminSettings = false
 
-    /// Active profile and its seeded content, populated by the wizard.
-    @State private var activeProfile: Profile? = nil
-    @State private var seededObjects: [SceneObject] = []
-    @State private var seededScenes: [SceneTalkScene] = []
+    /// Raw PIN captured during wizard — held in memory only, never written to disk as plaintext.
+    @State private var sessionPIN: String = ""
 
     var body: some View {
         Group {
-            if let profile = activeProfile {
-                profileBody(profile: profile)
+            if store.profile != nil {
+                profileLoaded
+            } else if store.hasProfile {
+                // Manifest exists but data not yet decrypted — prompt for PIN
+                PINUnlockView(manifest: store.manifest!) { pin in
+                    let ok = await store.load(pin: pin)
+                    if ok { sessionPIN = pin }
+                    return ok
+                }
             } else {
-                WizardView { profile, seed in
-                    activeProfile = profile
-                    seededObjects = seed.objects
-                    seededScenes = seed.scenes
+                // First launch — run setup wizard
+                WizardView { profile, pin, seed in
+                    try? await store.save(
+                        profile: profile,
+                        pin: pin,
+                        objects: seed.objects,
+                        scenes: seed.scenes
+                    )
+                    sessionPIN = pin
                 }
             }
         }
         .environment(appMode)
     }
 
-    // MARK: - Profile body
+    // MARK: - Profile loaded
 
-    @ViewBuilder
-    private func profileBody(profile: Profile) -> some View {
-        switch appMode.mode {
-        case .patient:
-            patientShell(profile: profile)
-
-        case .admin:
-            adminShell(profile: profile)
+    private var profileLoaded: some View {
+        Group {
+            if let profile = store.profile {
+                switch appMode.mode {
+                case .patient: AnyView(patientShell(profile: profile))
+                case .admin:   AnyView(adminShell(profile: profile))
+                }
+            } else {
+                EmptyView()
+            }
         }
     }
 
@@ -49,8 +62,8 @@ struct RootView: View {
 
     private func patientShell(profile: Profile) -> some View {
         SceneGridView(
-            scenes: seededScenes,
-            objects: seededObjects,
+            scenes: store.scenes,
+            objects: store.objects,
             essentialsConfig: .default(language: profile.language),
             audioService: LiveAudioService(),
             language: profile.language,
@@ -69,26 +82,28 @@ struct RootView: View {
     // MARK: - Admin shell
 
     private func adminShell(profile: Profile) -> some View {
-        // Admin UI shell — ObjectLibrary + SceneEditor wired in slice 12 with persistence
-        guard let idx = activeProfile.map({ _ in 0 }) else {
-            return AnyView(EmptyView())
-        }
-        _ = idx
-        let library = ObjectLibrary(profileId: profile.id, objects: seededObjects)
-        return AnyView(NavigationStack {
+        let library = ObjectLibrary(profileId: profile.id, objects: store.objects)
+        return NavigationStack {
             ObjectLibraryView(
                 library: library,
                 language: profile.language,
-                onDismiss: { appMode.lockToPatient() }
+                onDismiss: {
+                    // Persist any library changes before locking
+                    Task {
+                        try? await store.saveObjects(library.objects, pin: sessionPIN)
+                    }
+                    appMode.lockToPatient()
+                }
             )
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(String(localized: "Lock")) { appMode.lockToPatient() }
+                    Button(String(localized: "Lock")) {
+                        Task { try? await store.saveObjects(library.objects, pin: sessionPIN) }
+                        appMode.lockToPatient()
+                    }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showAdminSettings = true
-                    } label: {
+                    Button { showAdminSettings = true } label: {
                         Image(systemName: "gear")
                     }
                     .accessibilityLabel(String(localized: "Language Settings"))
@@ -97,15 +112,23 @@ struct RootView: View {
             .sheet(isPresented: $showAdminSettings) {
                 AdminSettingsView(
                     profile: Binding(
-                        get: { activeProfile ?? profile },
-                        set: { activeProfile = $0 }
+                        get: { store.profile ?? profile },
+                        set: { updated in
+                            Task { try? await store.save(
+                                profile: updated,
+                                pin: sessionPIN,
+                                objects: store.objects,
+                                scenes: store.scenes
+                            )}
+                        }
                     ),
                     onDone: { showAdminSettings = false }
                 )
                 .presentationDetents([.medium])
             }
-        })
+        }
     }
+
 }
 
 #Preview {

@@ -1,12 +1,18 @@
 import SwiftUI
 
-/// Renders a SceneObject as a semi-realistic SwiftUI prop — no PNG assets, no
-/// dark icon-box. Each known artwork key (`"art:bed"`, `"art:tv"`, etc.) maps
-/// to a hand-drawn shape composition. Unknown keys fall back to the SF symbol
-/// (legacy `"sfsymbol:..."` data) or a neutral placeholder.
+/// Renders a SceneObject as a bold-outline icon-style prop — no PNG assets,
+/// no dark icon-box. Each known artwork key (`"art:bed"`, `"art:tv"`, etc.)
+/// maps to a hand-drawn shape composition with black strokes and
+/// white/cream fills plus characteristic accent details.
 ///
-/// Props drawn:
-///   bed, pillow, tv, ivpole, cup, toilet, chair, window, clock, nurseCall
+/// Design language (matches reference icons supplied by the user):
+///   • Black stroke outline at ~lineWidth(width * 0.045) on the primary silhouette
+///   • White / cream fills with one accent colour where iconic
+///   • Distinguishing detail per prop (TV with remote, cup with falling water
+///     drops, nurse-call with red button, etc.)
+///   • Reads cleanly at any size — feels placeable like a SIMS prop
+///
+/// Props drawn: bed, pillow, tv, ivpole, cup, chair, window, clock, nurseCall.
 struct SceneObjectArtworkView: View {
 
     let object: SceneObject
@@ -21,7 +27,6 @@ struct SceneObjectArtworkView: View {
             case "tv":        TVArt(w: width, h: height)
             case "ivpole":    IVPoleArt(w: width, h: height)
             case "cup":       CupArt(w: width, h: height)
-            case "toilet":    ToiletArt(w: width, h: height)
             case "chair":     ChairArt(w: width, h: height)
             case "window":    WindowArt(w: width, h: height)
             case "clock":     ClockArt(w: width, h: height)
@@ -35,7 +40,7 @@ struct SceneObjectArtworkView: View {
     @ViewBuilder
     private var fallbackArt: some View {
         if let sfName = object.systemImageName {
-            // Legacy data — render the SF symbol cleanly without the dark box
+            // Legacy data — render the SF symbol cleanly without a dark box
             Image(systemName: sfName)
                 .resizable()
                 .scaledToFit()
@@ -56,336 +61,459 @@ struct SceneObjectArtworkView: View {
     }
 }
 
-// MARK: - Bed (hospital bed: mattress + headboard + pillow + side rails)
+// MARK: - Style helpers
+
+private enum Ink {
+    static let stroke = Color(red: 0.10, green: 0.10, blue: 0.12)
+    static let lightFill = Color.white
+    static let creamFill = Color(red: 0.98, green: 0.97, blue: 0.94)
+    static let pillowSeam = Color(red: 0.55, green: 0.55, blue: 0.58)
+    static let red    = Color(red: 0.86, green: 0.18, blue: 0.20)
+    static let blue   = Color(red: 0.34, green: 0.62, blue: 0.92)
+    static let sky    = Color(red: 0.74, green: 0.88, blue: 0.98)
+    static let wood   = Color(red: 0.62, green: 0.46, blue: 0.32)
+    static let cushion = Color(red: 0.88, green: 0.74, blue: 0.55)
+}
+
+/// Standard outline stroke width derived from the prop's smallest dimension.
+private func strokeWidth(_ w: CGFloat, _ h: CGFloat) -> CGFloat {
+    max(1.5, min(w, h) * 0.045)
+}
+
+// MARK: - Bed
 
 private struct BedArt: View {
     let w: CGFloat
     let h: CGFloat
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            // Headboard (left edge)
-            RoundedRectangle(cornerRadius: 4)
-                .fill(LinearGradient(
-                    colors: [Color(red: 0.38, green: 0.50, blue: 0.62),
-                             Color(red: 0.28, green: 0.40, blue: 0.52)],
-                    startPoint: .top, endPoint: .bottom
-                ))
-                .frame(width: w * 0.10, height: h * 0.95)
-                .offset(x: 0, y: 0)
+        let lw = strokeWidth(w, h)
 
-            // Mattress
-            RoundedRectangle(cornerRadius: 6)
-                .fill(LinearGradient(
-                    colors: [Color(red: 0.96, green: 0.97, blue: 0.99),
-                             Color(red: 0.86, green: 0.89, blue: 0.93)],
-                    startPoint: .top, endPoint: .bottom
-                ))
-                .frame(width: w * 0.85, height: h * 0.70)
-                .offset(x: w * 0.10, y: h * 0.18)
+        ZStack {
+            // Mattress + base outline (stylized hospital bed seen from the side)
+            Path { p in
+                let leftX: CGFloat = w * 0.05
+                let rightX: CGFloat = w * 0.95
+                let topY: CGFloat = h * 0.35
+                let baseTopY: CGFloat = h * 0.62
+                let baseBotY: CGFloat = h * 0.85
 
-            // Bedsheet fold lines
-            ForEach([0.40, 0.60], id: \.self) { fraction in
-                Path { p in
-                    p.move(to: CGPoint(x: w * 0.12, y: h * fraction))
-                    p.addLine(to: CGPoint(x: w * 0.92, y: h * fraction))
-                }
-                .stroke(Color(red: 0.78, green: 0.84, blue: 0.90), lineWidth: 1)
+                // Mattress (rounded rect)
+                p.move(to: CGPoint(x: leftX, y: topY))
+                p.addLine(to: CGPoint(x: rightX, y: topY))
+                p.addLine(to: CGPoint(x: rightX, y: baseTopY))
+                p.addLine(to: CGPoint(x: leftX, y: baseTopY))
+                p.closeSubpath()
+
+                // Base / frame
+                p.move(to: CGPoint(x: leftX + w * 0.05, y: baseTopY))
+                p.addLine(to: CGPoint(x: rightX - w * 0.05, y: baseTopY))
+                p.addLine(to: CGPoint(x: rightX - w * 0.05, y: baseBotY))
+                p.addLine(to: CGPoint(x: leftX + w * 0.05, y: baseBotY))
+                p.closeSubpath()
             }
+            .fill(Ink.lightFill)
 
-            // Side rail (top of bed)
-            Capsule()
-                .fill(Color(red: 0.55, green: 0.62, blue: 0.70))
-                .frame(width: w * 0.78, height: h * 0.04)
-                .offset(x: w * 0.13, y: h * 0.20)
+            Path { p in
+                let leftX: CGFloat = w * 0.05
+                let rightX: CGFloat = w * 0.95
+                let topY: CGFloat = h * 0.35
+                let baseTopY: CGFloat = h * 0.62
+                let baseBotY: CGFloat = h * 0.85
+                p.addRoundedRect(
+                    in: CGRect(x: leftX, y: topY,
+                               width: rightX - leftX, height: baseTopY - topY),
+                    cornerSize: CGSize(width: lw, height: lw)
+                )
+                p.addRect(CGRect(x: leftX + w * 0.05, y: baseTopY,
+                                 width: (rightX - leftX) - w * 0.10,
+                                 height: baseBotY - baseTopY))
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineJoin: .round))
 
-            // Side rail (bottom of bed)
-            Capsule()
-                .fill(Color(red: 0.55, green: 0.62, blue: 0.70))
-                .frame(width: w * 0.78, height: h * 0.04)
-                .offset(x: w * 0.13, y: h * 0.84)
+            // Headboard (taller box on the left, like a hospital bed)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.02, y: h * 0.10,
+                               width: w * 0.10, height: h * 0.55),
+                    cornerSize: CGSize(width: lw, height: lw)
+                )
+            }
+            .fill(Ink.lightFill)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.02, y: h * 0.10,
+                               width: w * 0.10, height: h * 0.55),
+                    cornerSize: CGSize(width: lw, height: lw)
+                )
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineJoin: .round))
 
-            // Foot board (right edge)
-            RoundedRectangle(cornerRadius: 3)
-                .fill(Color(red: 0.45, green: 0.55, blue: 0.65))
-                .frame(width: w * 0.04, height: h * 0.62)
-                .offset(x: w * 0.95, y: h * 0.22)
+            // Pillow at the head end of the mattress
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.13, y: h * 0.40,
+                               width: w * 0.20, height: h * 0.16),
+                    cornerSize: CGSize(width: w * 0.04, height: w * 0.04)
+                )
+            }
+            .fill(Ink.lightFill)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.13, y: h * 0.40,
+                               width: w * 0.20, height: h * 0.16),
+                    cornerSize: CGSize(width: w * 0.04, height: w * 0.04)
+                )
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw * 0.7, lineJoin: .round))
+
+            // Sheet fold line on mattress
+            Path { p in
+                p.move(to: CGPoint(x: w * 0.40, y: h * 0.50))
+                p.addLine(to: CGPoint(x: w * 0.92, y: h * 0.50))
+            }
+            .stroke(Ink.stroke.opacity(0.55), style: StrokeStyle(lineWidth: lw * 0.55, lineCap: .round))
+
+            // Foot board (slim vertical at the right edge)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.92, y: h * 0.30,
+                               width: w * 0.05, height: h * 0.32),
+                    cornerSize: CGSize(width: lw * 0.5, height: lw * 0.5)
+                )
+            }
+            .fill(Ink.lightFill)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.92, y: h * 0.30,
+                               width: w * 0.05, height: h * 0.32),
+                    cornerSize: CGSize(width: lw * 0.5, height: lw * 0.5)
+                )
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineJoin: .round))
+
+            // Wheels (two black circles at the bottom)
+            Circle()
+                .fill(Ink.stroke)
+                .frame(width: w * 0.06, height: w * 0.06)
+                .position(x: w * 0.20, y: h * 0.90)
+            Circle()
+                .fill(Ink.stroke)
+                .frame(width: w * 0.06, height: w * 0.06)
+                .position(x: w * 0.80, y: h * 0.90)
         }
-        .shadow(color: .black.opacity(0.18), radius: 4, y: 3)
     }
 }
 
-// MARK: - Pillow
+// MARK: - Pillow (matches reference: soft outline + seam)
 
 private struct PillowArt: View {
     let w: CGFloat
     let h: CGFloat
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: min(w, h) * 0.32)
-                .fill(LinearGradient(
-                    colors: [Color.white,
-                             Color(red: 0.92, green: 0.93, blue: 0.95)],
-                    startPoint: .topLeading, endPoint: .bottomTrailing
-                ))
-                .shadow(color: .black.opacity(0.20), radius: 3, y: 2)
+        let lw = strokeWidth(w, h)
 
-            // Subtle indent line down the centre
+        ZStack {
+            // Soft pillow shape (rounded rectangle, slightly squashed)
+            RoundedRectangle(cornerRadius: min(w, h) * 0.32)
+                .fill(Ink.lightFill)
+
+            RoundedRectangle(cornerRadius: min(w, h) * 0.32)
+                .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineJoin: .round))
+
+            // Seam line down the centre (curved suggestion of softness)
             Path { p in
                 p.move(to: CGPoint(x: w * 0.50, y: h * 0.20))
-                p.addLine(to: CGPoint(x: w * 0.50, y: h * 0.80))
+                p.addQuadCurve(
+                    to: CGPoint(x: w * 0.50, y: h * 0.80),
+                    control: CGPoint(x: w * 0.55, y: h * 0.50)
+                )
             }
-            .stroke(Color(red: 0.85, green: 0.86, blue: 0.88), lineWidth: 1)
+            .stroke(Ink.pillowSeam, style: StrokeStyle(lineWidth: lw * 0.55, lineCap: .round))
+
+            // Tiny crease at the corner
+            Path { p in
+                p.move(to: CGPoint(x: w * 0.18, y: h * 0.22))
+                p.addQuadCurve(
+                    to: CGPoint(x: w * 0.30, y: h * 0.30),
+                    control: CGPoint(x: w * 0.22, y: h * 0.18)
+                )
+            }
+            .stroke(Ink.pillowSeam, style: StrokeStyle(lineWidth: lw * 0.45, lineCap: .round))
         }
     }
 }
 
-// MARK: - TV (flat-screen + small wall mount + power LED)
+// MARK: - TV (with small remote control + arrow accent)
 
 private struct TVArt: View {
     let w: CGFloat
     let h: CGFloat
 
     var body: some View {
-        ZStack(alignment: .top) {
-            // Bezel
-            RoundedRectangle(cornerRadius: w * 0.04)
-                .fill(LinearGradient(
-                    colors: [Color(red: 0.10, green: 0.10, blue: 0.12),
-                             Color(red: 0.04, green: 0.04, blue: 0.06)],
-                    startPoint: .top, endPoint: .bottom
-                ))
+        let lw = strokeWidth(w, h)
 
-            // Screen
-            RoundedRectangle(cornerRadius: w * 0.02)
-                .fill(LinearGradient(
-                    colors: [Color(red: 0.10, green: 0.20, blue: 0.36),
-                             Color(red: 0.04, green: 0.08, blue: 0.18)],
-                    startPoint: .topLeading, endPoint: .bottomTrailing
-                ))
-                .frame(width: w * 0.88, height: h * 0.72)
-                .offset(y: h * 0.06)
+        ZStack(alignment: .topLeading) {
+            // TV bezel
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.08, y: h * 0.05,
+                               width: w * 0.84, height: h * 0.62),
+                    cornerSize: CGSize(width: lw * 1.5, height: lw * 1.5)
+                )
+            }
+            .fill(Ink.stroke)
 
-            // Soft screen reflection
-            RoundedRectangle(cornerRadius: w * 0.02)
-                .fill(LinearGradient(
-                    colors: [Color.white.opacity(0.18), .clear],
-                    startPoint: .topLeading, endPoint: .center
-                ))
-                .frame(width: w * 0.88, height: h * 0.72)
-                .offset(y: h * 0.06)
+            // Inner screen — solid black with subtle highlight
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.13, y: h * 0.10,
+                               width: w * 0.74, height: h * 0.50),
+                    cornerSize: CGSize(width: lw, height: lw)
+                )
+            }
+            .fill(Color(red: 0.06, green: 0.08, blue: 0.12))
 
-            // Wall mount stem (below the bezel)
-            Rectangle()
-                .fill(Color(red: 0.40, green: 0.40, blue: 0.42))
-                .frame(width: w * 0.06, height: h * 0.12)
-                .offset(y: h * 0.86)
+            // "TV" text inside the screen
+            Text("TV")
+                .font(.system(size: min(w, h) * 0.28, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white)
+                .frame(width: w * 0.74, height: h * 0.50)
+                .offset(x: w * 0.13, y: h * 0.10)
 
-            // Power LED dot
+            // Stand (small triangular foot under the bezel)
+            Path { p in
+                p.move(to: CGPoint(x: w * 0.42, y: h * 0.67))
+                p.addLine(to: CGPoint(x: w * 0.58, y: h * 0.67))
+                p.addLine(to: CGPoint(x: w * 0.55, y: h * 0.74))
+                p.addLine(to: CGPoint(x: w * 0.45, y: h * 0.74))
+                p.closeSubpath()
+            }
+            .fill(Ink.stroke)
+
+            // Stand base line
+            Path { p in
+                p.move(to: CGPoint(x: w * 0.30, y: h * 0.74))
+                p.addLine(to: CGPoint(x: w * 0.70, y: h * 0.74))
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineCap: .round))
+
+            // Remote control — small rounded pill in lower-right
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.62, y: h * 0.78,
+                               width: w * 0.32, height: h * 0.20),
+                    cornerSize: CGSize(width: w * 0.06, height: w * 0.06)
+                )
+            }
+            .fill(Ink.lightFill)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.62, y: h * 0.78,
+                               width: w * 0.32, height: h * 0.20),
+                    cornerSize: CGSize(width: w * 0.06, height: w * 0.06)
+                )
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw * 0.7, lineJoin: .round))
+
+            // Arrow / play triangle on the remote
+            Path { p in
+                let cx = w * 0.74
+                let cy = h * 0.88
+                p.move(to: CGPoint(x: cx - w * 0.03, y: cy - h * 0.04))
+                p.addLine(to: CGPoint(x: cx + w * 0.03, y: cy))
+                p.addLine(to: CGPoint(x: cx - w * 0.03, y: cy + h * 0.04))
+                p.closeSubpath()
+            }
+            .fill(Ink.stroke)
+
+            // Round button on the remote
             Circle()
-                .fill(Color.green.opacity(0.85))
-                .frame(width: w * 0.02, height: w * 0.02)
-                .offset(x: w * 0.42, y: h * 0.78)
+                .fill(Ink.stroke)
+                .frame(width: w * 0.04, height: w * 0.04)
+                .position(x: w * 0.86, y: h * 0.88)
         }
-        .shadow(color: .black.opacity(0.30), radius: 5, y: 3)
     }
 }
 
-// MARK: - IV pole (vertical pole + hanging bag with red label)
+// MARK: - IV pole (clear bag with red label, hooked to a stand)
 
 private struct IVPoleArt: View {
     let w: CGFloat
     let h: CGFloat
 
     var body: some View {
+        let lw = strokeWidth(w, h)
+
         ZStack(alignment: .top) {
-            // Pole — thin grey vertical
-            Rectangle()
-                .fill(LinearGradient(
-                    colors: [Color(red: 0.78, green: 0.80, blue: 0.84),
-                             Color(red: 0.56, green: 0.58, blue: 0.62)],
-                    startPoint: .leading, endPoint: .trailing
-                ))
-                .frame(width: w * 0.16, height: h * 0.92)
-                .offset(y: h * 0.08)
-
-            // Top hook
+            // Hook at top
             Path { p in
-                p.move(to: CGPoint(x: w * 0.50, y: 0))
-                p.addLine(to: CGPoint(x: w * 0.50, y: h * 0.06))
-                p.addArc(
-                    center: CGPoint(x: w * 0.30, y: h * 0.06),
-                    radius: w * 0.20,
-                    startAngle: .degrees(0),
-                    endAngle: .degrees(180),
-                    clockwise: true
+                p.move(to: CGPoint(x: w * 0.50, y: h * 0.02))
+                p.addQuadCurve(
+                    to: CGPoint(x: w * 0.50, y: h * 0.10),
+                    control: CGPoint(x: w * 0.20, y: h * 0.04)
                 )
             }
-            .stroke(Color(red: 0.50, green: 0.52, blue: 0.56), lineWidth: max(1.5, w * 0.06))
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineCap: .round, lineJoin: .round))
 
-            // IV bag
-            RoundedRectangle(cornerRadius: w * 0.10)
-                .fill(LinearGradient(
-                    colors: [Color(red: 0.95, green: 0.97, blue: 1.00).opacity(0.90),
-                             Color(red: 0.80, green: 0.88, blue: 0.96).opacity(0.85)],
-                    startPoint: .top, endPoint: .bottom
-                ))
-                .frame(width: w * 0.80, height: h * 0.30)
-                .offset(y: h * 0.16)
-
-            // Red label band on the IV bag
-            Rectangle()
-                .fill(Color(red: 0.86, green: 0.18, blue: 0.18))
-                .frame(width: w * 0.80, height: h * 0.04)
-                .offset(y: h * 0.30)
-
-            // Tubing dangling down
+            // IV bag (rounded rect with flat top)
             Path { p in
-                p.move(to: CGPoint(x: w * 0.50, y: h * 0.46))
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.18, y: h * 0.10,
+                               width: w * 0.64, height: h * 0.30),
+                    cornerSize: CGSize(width: w * 0.10, height: w * 0.10)
+                )
+            }
+            .fill(Ink.lightFill)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.18, y: h * 0.10,
+                               width: w * 0.64, height: h * 0.30),
+                    cornerSize: CGSize(width: w * 0.10, height: w * 0.10)
+                )
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineJoin: .round))
+
+            // Red label band on the bag
+            Path { p in
+                p.addRect(CGRect(x: w * 0.18, y: h * 0.20,
+                                 width: w * 0.64, height: h * 0.06))
+            }
+            .fill(Ink.red)
+
+            // Pole — vertical line below the bag
+            Path { p in
+                p.move(to: CGPoint(x: w * 0.50, y: h * 0.40))
+                p.addLine(to: CGPoint(x: w * 0.50, y: h * 0.92))
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw * 1.2, lineCap: .round))
+
+            // Tubing dropping down from the bag
+            Path { p in
+                p.move(to: CGPoint(x: w * 0.50, y: h * 0.40))
                 p.addCurve(
-                    to: CGPoint(x: w * 0.62, y: h * 0.95),
-                    control1: CGPoint(x: w * 0.50, y: h * 0.65),
-                    control2: CGPoint(x: w * 0.74, y: h * 0.80)
+                    to: CGPoint(x: w * 0.78, y: h * 0.92),
+                    control1: CGPoint(x: w * 0.50, y: h * 0.62),
+                    control2: CGPoint(x: w * 0.86, y: h * 0.78)
                 )
             }
-            .stroke(Color(red: 0.80, green: 0.85, blue: 0.92), lineWidth: max(1, w * 0.04))
+            .stroke(Ink.blue.opacity(0.85), style: StrokeStyle(lineWidth: lw * 0.75, lineCap: .round))
+
+            // Wheel base — short horizontal stroke at the bottom
+            Path { p in
+                p.move(to: CGPoint(x: w * 0.32, y: h * 0.94))
+                p.addLine(to: CGPoint(x: w * 0.68, y: h * 0.94))
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineCap: .round))
+
+            // Two wheels
+            Circle()
+                .fill(Ink.stroke)
+                .frame(width: w * 0.10, height: w * 0.10)
+                .position(x: w * 0.34, y: h * 0.96)
+            Circle()
+                .fill(Ink.stroke)
+                .frame(width: w * 0.10, height: w * 0.10)
+                .position(x: w * 0.66, y: h * 0.96)
         }
     }
 }
 
-// MARK: - Cup (clear glass on a small saucer with water)
+// MARK: - Cup (matches reference: outlined glass with falling drops)
 
 private struct CupArt: View {
     let w: CGFloat
     let h: CGFloat
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // Saucer
-            Ellipse()
-                .fill(LinearGradient(
-                    colors: [Color(red: 0.92, green: 0.93, blue: 0.95),
-                             Color(red: 0.78, green: 0.80, blue: 0.82)],
-                    startPoint: .top, endPoint: .bottom
-                ))
-                .frame(width: w * 0.95, height: h * 0.18)
-                .offset(y: -h * 0.04)
+        let lw = strokeWidth(w, h)
 
-            // Glass body
+        ZStack(alignment: .top) {
+            // Two falling water drops above the cup
+            drop(at: CGPoint(x: w * 0.36, y: h * 0.10), size: w * 0.10)
+            drop(at: CGPoint(x: w * 0.62, y: h * 0.05), size: w * 0.12)
+
+            // Glass body (slightly tapered)
             Path { p in
-                let xL = w * 0.20
-                let xR = w * 0.80
-                p.move(to: CGPoint(x: xL, y: h * 0.20))
-                p.addLine(to: CGPoint(x: xL + w * 0.04, y: h * 0.86))
-                p.addQuadCurve(
-                    to: CGPoint(x: xR - w * 0.04, y: h * 0.86),
-                    control: CGPoint(x: w * 0.50, y: h * 0.92)
-                )
-                p.addLine(to: CGPoint(x: xR, y: h * 0.20))
+                let topL = CGPoint(x: w * 0.18, y: h * 0.38)
+                let topR = CGPoint(x: w * 0.82, y: h * 0.38)
+                let botR = CGPoint(x: w * 0.74, y: h * 0.94)
+                let botL = CGPoint(x: w * 0.26, y: h * 0.94)
+
+                p.move(to: topL)
+                p.addLine(to: topR)
+                p.addLine(to: botR)
+                p.addQuadCurve(to: botL, control: CGPoint(x: w * 0.50, y: h * 1.02))
                 p.closeSubpath()
             }
-            .fill(LinearGradient(
-                colors: [Color(red: 0.85, green: 0.93, blue: 1.00).opacity(0.55),
-                         Color(red: 0.60, green: 0.78, blue: 0.95).opacity(0.55)],
-                startPoint: .top, endPoint: .bottom
-            ))
+            .fill(Ink.lightFill)
 
-            // Water level
             Path { p in
-                let xL = w * 0.24
-                let xR = w * 0.76
-                p.move(to: CGPoint(x: xL, y: h * 0.46))
-                p.addLine(to: CGPoint(x: xR, y: h * 0.46))
-                p.addLine(to: CGPoint(x: xR - w * 0.03, y: h * 0.84))
-                p.addQuadCurve(
-                    to: CGPoint(x: xL + w * 0.03, y: h * 0.84),
-                    control: CGPoint(x: w * 0.50, y: h * 0.90)
-                )
+                let topL = CGPoint(x: w * 0.18, y: h * 0.38)
+                let topR = CGPoint(x: w * 0.82, y: h * 0.38)
+                let botR = CGPoint(x: w * 0.74, y: h * 0.94)
+                let botL = CGPoint(x: w * 0.26, y: h * 0.94)
+
+                p.move(to: topL)
+                p.addLine(to: topR)
+                p.addLine(to: botR)
+                p.addQuadCurve(to: botL, control: CGPoint(x: w * 0.50, y: h * 1.02))
                 p.closeSubpath()
             }
-            .fill(Color(red: 0.42, green: 0.66, blue: 0.92).opacity(0.65))
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineJoin: .round))
 
-            // Glass rim (ellipse top)
-            Ellipse()
-                .stroke(Color(red: 0.55, green: 0.72, blue: 0.90), lineWidth: max(1, w * 0.04))
-                .frame(width: w * 0.60, height: h * 0.10)
-                .offset(y: -h * 0.62)
-
-            // Highlight
+            // Wavy water line inside the glass
             Path { p in
-                p.move(to: CGPoint(x: w * 0.30, y: h * 0.30))
-                p.addLine(to: CGPoint(x: w * 0.34, y: h * 0.78))
+                let y = h * 0.62
+                let xL = w * 0.21
+                let xR = w * 0.79
+                p.move(to: CGPoint(x: xL, y: y))
+                p.addCurve(
+                    to: CGPoint(x: xR, y: y),
+                    control1: CGPoint(x: w * 0.40, y: y - h * 0.04),
+                    control2: CGPoint(x: w * 0.60, y: y + h * 0.04)
+                )
             }
-            .stroke(Color.white.opacity(0.50), lineWidth: max(1, w * 0.03))
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw * 0.85, lineCap: .round))
         }
     }
-}
 
-// MARK: - Toilet (tank + bowl)
+    /// A single black-outlined teardrop water drop centred at `centre`.
+    private func drop(at centre: CGPoint, size: CGFloat) -> some View {
+        let lw = strokeWidth(w, h) * 0.7
+        return Path { p in
+            let s = size
+            let top = CGPoint(x: centre.x, y: centre.y - s * 0.5)
+            let right = CGPoint(x: centre.x + s * 0.40, y: centre.y + s * 0.20)
+            let bottom = CGPoint(x: centre.x, y: centre.y + s * 0.55)
+            let left = CGPoint(x: centre.x - s * 0.40, y: centre.y + s * 0.20)
 
-private struct ToiletArt: View {
-    let w: CGFloat
-    let h: CGFloat
-
-    var body: some View {
-        ZStack(alignment: .top) {
-            // Tank (back, top half)
-            RoundedRectangle(cornerRadius: w * 0.04)
-                .fill(LinearGradient(
-                    colors: [Color.white,
-                             Color(red: 0.88, green: 0.90, blue: 0.92)],
-                    startPoint: .top, endPoint: .bottom
-                ))
-                .frame(width: w * 0.62, height: h * 0.38)
-                .offset(x: w * 0.04, y: 0)
-
-            // Flush handle
-            RoundedRectangle(cornerRadius: 1)
-                .fill(Color(red: 0.65, green: 0.67, blue: 0.70))
-                .frame(width: w * 0.10, height: h * 0.03)
-                .offset(x: w * 0.10, y: h * 0.10)
-
-            // Lid hinge between tank and bowl
-            Rectangle()
-                .fill(Color(red: 0.78, green: 0.80, blue: 0.82))
-                .frame(width: w * 0.66, height: h * 0.03)
-                .offset(x: w * 0.02, y: h * 0.36)
-
-            // Bowl — front, oval-ish
-            Path { p in
-                let topY: CGFloat = h * 0.42
-                let botY: CGFloat = h * 0.96
-                p.move(to: CGPoint(x: w * 0.06, y: topY))
-                p.addLine(to: CGPoint(x: w * 0.94, y: topY))
-                p.addQuadCurve(
-                    to: CGPoint(x: w * 0.50, y: botY),
-                    control: CGPoint(x: w * 1.05, y: h * 0.90)
-                )
-                p.addQuadCurve(
-                    to: CGPoint(x: w * 0.06, y: topY),
-                    control: CGPoint(x: w * -0.05, y: h * 0.90)
-                )
-            }
-            .fill(LinearGradient(
-                colors: [Color.white,
-                         Color(red: 0.86, green: 0.88, blue: 0.90)],
-                startPoint: .top, endPoint: .bottom
-            ))
-
-            // Bowl interior (water)
-            Ellipse()
-                .fill(Color(red: 0.62, green: 0.78, blue: 0.92).opacity(0.50))
-                .frame(width: w * 0.58, height: h * 0.18)
-                .offset(x: w * 0.06, y: h * 0.55)
-
-            // Seat outline
-            Ellipse()
-                .stroke(Color(red: 0.70, green: 0.72, blue: 0.74), lineWidth: max(1, w * 0.04))
-                .frame(width: w * 0.78, height: h * 0.40)
-                .offset(x: w * -0.04, y: h * 0.42)
+            p.move(to: top)
+            p.addQuadCurve(to: right, control: CGPoint(x: centre.x + s * 0.45, y: centre.y - s * 0.20))
+            p.addQuadCurve(to: bottom, control: CGPoint(x: centre.x + s * 0.45, y: centre.y + s * 0.50))
+            p.addQuadCurve(to: left, control: CGPoint(x: centre.x - s * 0.45, y: centre.y + s * 0.50))
+            p.addQuadCurve(to: top, control: CGPoint(x: centre.x - s * 0.45, y: centre.y - s * 0.20))
+            p.closeSubpath()
         }
-        .shadow(color: .black.opacity(0.18), radius: 3, y: 2)
+        .fill(Ink.lightFill)
+        .overlay {
+            Path { p in
+                let s = size
+                let top = CGPoint(x: centre.x, y: centre.y - s * 0.5)
+                let right = CGPoint(x: centre.x + s * 0.40, y: centre.y + s * 0.20)
+                let bottom = CGPoint(x: centre.x, y: centre.y + s * 0.55)
+                let left = CGPoint(x: centre.x - s * 0.40, y: centre.y + s * 0.20)
+
+                p.move(to: top)
+                p.addQuadCurve(to: right, control: CGPoint(x: centre.x + s * 0.45, y: centre.y - s * 0.20))
+                p.addQuadCurve(to: bottom, control: CGPoint(x: centre.x + s * 0.45, y: centre.y + s * 0.50))
+                p.addQuadCurve(to: left, control: CGPoint(x: centre.x - s * 0.45, y: centre.y + s * 0.50))
+                p.addQuadCurve(to: top, control: CGPoint(x: centre.x - s * 0.45, y: centre.y - s * 0.20))
+                p.closeSubpath()
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineJoin: .round))
+        }
     }
 }
 
@@ -396,206 +524,276 @@ private struct ChairArt: View {
     let h: CGFloat
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        let lw = strokeWidth(w, h)
+
+        ZStack {
             // Backrest
-            RoundedRectangle(cornerRadius: w * 0.10)
-                .fill(LinearGradient(
-                    colors: [Color(red: 0.65, green: 0.50, blue: 0.40),
-                             Color(red: 0.50, green: 0.36, blue: 0.28)],
-                    startPoint: .top, endPoint: .bottom
-                ))
-                .frame(width: w * 0.78, height: h * 0.68)
-                .offset(x: w * 0.11, y: -h * 0.32)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.12, y: h * 0.05,
+                               width: w * 0.76, height: h * 0.55),
+                    cornerSize: CGSize(width: w * 0.10, height: w * 0.10)
+                )
+            }
+            .fill(Ink.cushion)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.12, y: h * 0.05,
+                               width: w * 0.76, height: h * 0.55),
+                    cornerSize: CGSize(width: w * 0.10, height: w * 0.10)
+                )
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineJoin: .round))
 
             // Seat cushion
-            RoundedRectangle(cornerRadius: w * 0.08)
-                .fill(Color(red: 0.72, green: 0.58, blue: 0.46))
-                .frame(width: w * 0.92, height: h * 0.30)
-                .offset(y: -h * 0.10)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.04, y: h * 0.50,
+                               width: w * 0.92, height: h * 0.30),
+                    cornerSize: CGSize(width: w * 0.06, height: w * 0.06)
+                )
+            }
+            .fill(Ink.cushion)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.04, y: h * 0.50,
+                               width: w * 0.92, height: h * 0.30),
+                    cornerSize: CGSize(width: w * 0.06, height: w * 0.06)
+                )
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineJoin: .round))
 
             // Left arm
-            RoundedRectangle(cornerRadius: w * 0.06)
-                .fill(Color(red: 0.55, green: 0.42, blue: 0.32))
-                .frame(width: w * 0.16, height: h * 0.46)
-                .offset(x: -w * 0.38, y: -h * 0.16)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.00, y: h * 0.32,
+                               width: w * 0.16, height: h * 0.50),
+                    cornerSize: CGSize(width: w * 0.06, height: w * 0.06)
+                )
+            }
+            .fill(Ink.cushion)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.00, y: h * 0.32,
+                               width: w * 0.16, height: h * 0.50),
+                    cornerSize: CGSize(width: w * 0.06, height: w * 0.06)
+                )
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineJoin: .round))
 
             // Right arm
-            RoundedRectangle(cornerRadius: w * 0.06)
-                .fill(Color(red: 0.55, green: 0.42, blue: 0.32))
-                .frame(width: w * 0.16, height: h * 0.46)
-                .offset(x: w * 0.38, y: -h * 0.16)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.84, y: h * 0.32,
+                               width: w * 0.16, height: h * 0.50),
+                    cornerSize: CGSize(width: w * 0.06, height: w * 0.06)
+                )
+            }
+            .fill(Ink.cushion)
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.84, y: h * 0.32,
+                               width: w * 0.16, height: h * 0.50),
+                    cornerSize: CGSize(width: w * 0.06, height: w * 0.06)
+                )
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineJoin: .round))
 
-            // Legs (subtle dark base)
-            Rectangle()
-                .fill(Color(red: 0.30, green: 0.22, blue: 0.16))
-                .frame(width: w * 0.92, height: h * 0.05)
+            // Two legs (short stubs)
+            Path { p in
+                p.move(to: CGPoint(x: w * 0.18, y: h * 0.80))
+                p.addLine(to: CGPoint(x: w * 0.18, y: h * 0.94))
+                p.move(to: CGPoint(x: w * 0.82, y: h * 0.80))
+                p.addLine(to: CGPoint(x: w * 0.82, y: h * 0.94))
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineCap: .round))
         }
-        .shadow(color: .black.opacity(0.22), radius: 3, y: 2)
     }
 }
 
-// MARK: - Window (frame + curtains + sky)
+// MARK: - Window (frame + sky panes + curtains)
 
 private struct WindowArt: View {
     let w: CGFloat
     let h: CGFloat
 
     var body: some View {
-        ZStack {
-            // Window frame
-            RoundedRectangle(cornerRadius: 3)
-                .fill(Color(red: 0.95, green: 0.95, blue: 0.96))
+        let lw = strokeWidth(w, h)
 
-            // Sky pane
-            Rectangle()
-                .fill(LinearGradient(
-                    colors: [Color(red: 0.62, green: 0.82, blue: 0.96),
-                             Color(red: 0.86, green: 0.94, blue: 1.00)],
-                    startPoint: .top, endPoint: .bottom
-                ))
-                .frame(width: w * 0.86, height: h * 0.86)
+        ZStack {
+            // Frame
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.10, y: h * 0.06,
+                               width: w * 0.80, height: h * 0.84),
+                    cornerSize: CGSize(width: lw, height: lw)
+                )
+            }
+            .fill(Ink.lightFill)
+
+            // Sky inside
+            Path { p in
+                p.addRect(CGRect(x: w * 0.16, y: h * 0.12,
+                                 width: w * 0.68, height: h * 0.72))
+            }
+            .fill(Ink.sky)
 
             // Cross mullions
-            Rectangle()
-                .fill(Color(red: 0.95, green: 0.95, blue: 0.96))
-                .frame(width: w * 0.86, height: max(1, h * 0.04))
-            Rectangle()
-                .fill(Color(red: 0.95, green: 0.95, blue: 0.96))
-                .frame(width: max(1, w * 0.04), height: h * 0.86)
+            Path { p in
+                p.addRect(CGRect(x: w * 0.16, y: h * 0.46,
+                                 width: w * 0.68, height: lw * 1.2))
+                p.addRect(CGRect(x: w * 0.48, y: h * 0.12,
+                                 width: lw * 1.2, height: h * 0.72))
+            }
+            .fill(Ink.stroke)
 
-            // Subtle cloud
-            Ellipse()
-                .fill(Color.white.opacity(0.85))
-                .frame(width: w * 0.30, height: h * 0.10)
-                .offset(x: -w * 0.12, y: -h * 0.20)
+            // Cloud
+            Group {
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: w * 0.12, height: w * 0.12)
+                    .position(x: w * 0.32, y: h * 0.28)
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: w * 0.16, height: w * 0.16)
+                    .position(x: w * 0.40, y: h * 0.30)
+            }
 
-            // Outer frame
-            RoundedRectangle(cornerRadius: 3)
-                .stroke(Color(red: 0.78, green: 0.78, blue: 0.80), lineWidth: max(1, min(w, h) * 0.04))
+            // Outer frame stroke
+            Path { p in
+                p.addRoundedRect(
+                    in: CGRect(x: w * 0.10, y: h * 0.06,
+                               width: w * 0.80, height: h * 0.84),
+                    cornerSize: CGSize(width: lw, height: lw)
+                )
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineJoin: .round))
 
-            // Curtain panels on the outer edges
-            curtainPanel
-                .frame(maxWidth: .infinity, alignment: .leading)
-            curtainPanel
-                .frame(maxWidth: .infinity, alignment: .trailing)
+            // Inner pane stroke
+            Path { p in
+                p.addRect(CGRect(x: w * 0.16, y: h * 0.12,
+                                 width: w * 0.68, height: h * 0.72))
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw * 0.7, lineJoin: .round))
+
+            // Curtain rod across the top
+            Path { p in
+                p.move(to: CGPoint(x: w * 0.04, y: h * 0.06))
+                p.addLine(to: CGPoint(x: w * 0.96, y: h * 0.06))
+            }
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw, lineCap: .round))
+
+            // Tiny curtain ties on left and right
+            curtainTie(x: w * 0.10)
+            curtainTie(x: w * 0.90)
         }
-        .shadow(color: .black.opacity(0.15), radius: 3, y: 2)
     }
 
-    private var curtainPanel: some View {
-        LinearGradient(
-            stops: [
-                .init(color: Color(red: 0.60, green: 0.30, blue: 0.30), location: 0.0),
-                .init(color: Color(red: 0.78, green: 0.45, blue: 0.45), location: 0.5),
-                .init(color: Color(red: 0.55, green: 0.28, blue: 0.28), location: 1.0),
-            ],
-            startPoint: .leading, endPoint: .trailing
-        )
-        .frame(width: w * 0.14)
-        .clipShape(RoundedRectangle(cornerRadius: 2))
+    private func curtainTie(x: CGFloat) -> some View {
+        let lw = strokeWidth(w, h) * 0.7
+        return Path { p in
+            p.move(to: CGPoint(x: x - w * 0.03, y: h * 0.06))
+            p.addQuadCurve(
+                to: CGPoint(x: x + w * 0.03, y: h * 0.30),
+                control: CGPoint(x: x - w * 0.06, y: h * 0.18)
+            )
+        }
+        .stroke(Ink.red.opacity(0.85), style: StrokeStyle(lineWidth: lw, lineCap: .round))
     }
 }
 
-// MARK: - Clock (analog wall clock)
+// MARK: - Clock (analog, bold outline)
 
 private struct ClockArt: View {
     let w: CGFloat
     let h: CGFloat
 
     var body: some View {
-        ZStack {
-            // Clock face
-            Circle()
-                .fill(LinearGradient(
-                    colors: [Color.white,
-                             Color(red: 0.92, green: 0.92, blue: 0.94)],
-                    startPoint: .top, endPoint: .bottom
-                ))
-            // Bezel
-            Circle()
-                .stroke(Color(red: 0.30, green: 0.32, blue: 0.34), lineWidth: max(1, min(w, h) * 0.06))
+        let lw = strokeWidth(w, h)
+        let r = min(w, h) * 0.45
 
-            // Hour ticks (12, 3, 6, 9)
-            ForEach(0..<12, id: \.self) { i in
+        ZStack {
+            Circle()
+                .fill(Ink.lightFill)
+                .frame(width: r * 2, height: r * 2)
+
+            Circle()
+                .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw))
+                .frame(width: r * 2, height: r * 2)
+
+            // 12 / 3 / 6 / 9 ticks
+            ForEach(0..<4, id: \.self) { i in
                 Rectangle()
-                    .fill(Color(red: 0.30, green: 0.32, blue: 0.34))
-                    .frame(width: max(1, min(w, h) * 0.025),
-                           height: i % 3 == 0 ? min(w, h) * 0.10 : min(w, h) * 0.05)
-                    .offset(y: -min(w, h) * 0.40)
-                    .rotationEffect(.degrees(Double(i) * 30))
+                    .fill(Ink.stroke)
+                    .frame(width: lw * 0.8, height: r * 0.18)
+                    .offset(y: -r * 0.85)
+                    .rotationEffect(.degrees(Double(i) * 90))
             }
 
             // Hour hand (pointing to 10)
             Capsule()
-                .fill(Color(red: 0.10, green: 0.12, blue: 0.14))
-                .frame(width: max(1, min(w, h) * 0.04), height: min(w, h) * 0.30)
-                .offset(y: -min(w, h) * 0.12)
+                .fill(Ink.stroke)
+                .frame(width: lw * 1.2, height: r * 0.55)
+                .offset(y: -r * 0.20)
                 .rotationEffect(.degrees(-60))
 
             // Minute hand (pointing to 2)
             Capsule()
-                .fill(Color(red: 0.10, green: 0.12, blue: 0.14))
-                .frame(width: max(1, min(w, h) * 0.03), height: min(w, h) * 0.40)
-                .offset(y: -min(w, h) * 0.18)
+                .fill(Ink.stroke)
+                .frame(width: lw * 0.9, height: r * 0.78)
+                .offset(y: -r * 0.32)
                 .rotationEffect(.degrees(60))
 
             // Centre cap
             Circle()
-                .fill(Color(red: 0.78, green: 0.20, blue: 0.20))
-                .frame(width: min(w, h) * 0.10, height: min(w, h) * 0.10)
+                .fill(Ink.red)
+                .frame(width: r * 0.20, height: r * 0.20)
         }
-        .shadow(color: .black.opacity(0.20), radius: 3, y: 2)
     }
 }
 
-// MARK: - Nurse call button (round red button on a thin cord)
+// MARK: - Nurse call button (round red button on a cord, with a white plus)
 
 private struct NurseCallArt: View {
     let w: CGFloat
     let h: CGFloat
 
     var body: some View {
-        ZStack(alignment: .top) {
-            // Cord (curved) — drawn first, behind the button
+        let lw = strokeWidth(w, h)
+
+        ZStack {
+            // Cord coming down from the top
             Path { p in
                 p.move(to: CGPoint(x: w * 0.50, y: 0))
                 p.addCurve(
-                    to: CGPoint(x: w * 0.50, y: h * 0.50),
+                    to: CGPoint(x: w * 0.50, y: h * 0.45),
                     control1: CGPoint(x: w * 0.30, y: h * 0.18),
-                    control2: CGPoint(x: w * 0.70, y: h * 0.34)
+                    control2: CGPoint(x: w * 0.70, y: h * 0.32)
                 )
             }
-            .stroke(Color(red: 0.85, green: 0.85, blue: 0.88), lineWidth: max(1, min(w, h) * 0.06))
+            .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw * 0.9, lineCap: .round))
 
             // Button body
             Circle()
-                .fill(RadialGradient(
-                    colors: [Color(red: 0.96, green: 0.30, blue: 0.30),
-                             Color(red: 0.70, green: 0.10, blue: 0.10)],
-                    center: .topLeading,
-                    startRadius: 0,
-                    endRadius: min(w, h) * 0.80
-                ))
-                .frame(width: w * 0.80, height: w * 0.80)
-                .offset(y: h * 0.45)
+                .fill(Ink.red)
+                .frame(width: w * 0.86, height: w * 0.86)
+                .offset(y: h * 0.20)
 
-            // Inner highlight
             Circle()
-                .stroke(Color.white.opacity(0.55), lineWidth: max(1, w * 0.04))
-                .frame(width: w * 0.55, height: w * 0.55)
-                .offset(y: h * 0.45 + w * 0.12)
+                .stroke(Ink.stroke, style: StrokeStyle(lineWidth: lw))
+                .frame(width: w * 0.86, height: w * 0.86)
+                .offset(y: h * 0.20)
 
-            // White cross icon
+            // White plus icon
             ZStack {
-                Rectangle()
+                Capsule()
                     .fill(Color.white)
-                    .frame(width: w * 0.32, height: w * 0.10)
-                Rectangle()
+                    .frame(width: w * 0.46, height: w * 0.14)
+                Capsule()
                     .fill(Color.white)
-                    .frame(width: w * 0.10, height: w * 0.32)
+                    .frame(width: w * 0.14, height: w * 0.46)
             }
-            .offset(y: h * 0.45 + w * 0.40)
+            .offset(y: h * 0.20)
         }
-        .shadow(color: .black.opacity(0.30), radius: 3, y: 2)
     }
 }

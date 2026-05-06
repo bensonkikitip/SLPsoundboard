@@ -32,23 +32,24 @@ enum HospitalStarter {
     private static func seedEnglish(profileId: UUID) -> SeedResult {
         let bed       = noun(profileId, "Bed",        "art:bed")
         let pillow    = noun(profileId, "Pillow",     "art:pillow")
-        let tv        = noun(profileId, "TV",         "art:tv")
-        let ivPole    = noun(profileId, "IV pole",    "art:ivpole")
+        // Disambiguate "TV" (often read letter-by-letter) and "IV pole" so TTS
+        // pronounces them naturally / unambiguously.
+        let tv        = noun(profileId, "TV",         "art:tv",      tts: "Television")
+        let ivPole    = noun(profileId, "IV pole",    "art:ivpole",  tts: "I V pole")
         let cup       = noun(profileId, "Cup",        "art:cup")
-        let toilet    = noun(profileId, "Toilet",     "art:toilet")
         let chair     = noun(profileId, "Chair",      "art:chair")
         let window    = noun(profileId, "Window",     "art:window")
         let clock     = noun(profileId, "Clock",      "art:clock")
         let nurseCall = noun(profileId, "Nurse call", "art:nurseCall")
 
-        let allObjects = [bed, pillow, tv, ivPole, cup, toilet, chair, window, clock, nurseCall]
+        let allObjects = [bed, pillow, tv, ivPole, cup, chair, window, clock, nurseCall]
 
         // Hospital room from the foot of the bed (landscape iPad):
         //   • Clock upper-left      • Window upper-center      • TV upper-right
         //   • Nurse call at headboard (left side of bed)
         //   • Bed in centre           • Pillow at the head of bed
         //   • IV pole right of bed    • Cup on right nightstand
-        //   • Chair lower-left        • Toilet lower-right (bathroom corner)
+        //   • Chair lower-left
         let sceneId = UUID()
         let placements: [Placement] = [
             Placement(objectId: clock.id,     sceneId: sceneId, x: 0.10, y: 0.10, width: 0.08, height: 0.08, zIndex: 1),
@@ -60,7 +61,6 @@ enum HospitalStarter {
             Placement(objectId: ivPole.id,    sceneId: sceneId, x: 0.76, y: 0.32, width: 0.07, height: 0.30, zIndex: 1),
             Placement(objectId: cup.id,       sceneId: sceneId, x: 0.85, y: 0.50, width: 0.08, height: 0.10, zIndex: 1),
             Placement(objectId: chair.id,     sceneId: sceneId, x: 0.06, y: 0.62, width: 0.14, height: 0.20, zIndex: 1),
-            Placement(objectId: toilet.id,    sceneId: sceneId, x: 0.78, y: 0.74, width: 0.12, height: 0.16, zIndex: 1),
         ]
 
         let hospitalRoom = SceneTalkScene(
@@ -81,13 +81,12 @@ enum HospitalStarter {
         let tv        = noun(profileId, "Televisión",      "art:tv")
         let ivPole    = noun(profileId, "Suero",           "art:ivpole")
         let cup       = noun(profileId, "Taza",            "art:cup")
-        let toilet    = noun(profileId, "Inodoro",         "art:toilet")
         let chair     = noun(profileId, "Silla",           "art:chair")
         let window    = noun(profileId, "Ventana",         "art:window")
         let clock     = noun(profileId, "Reloj",           "art:clock")
         let nurseCall = noun(profileId, "Botón enfermera", "art:nurseCall")
 
-        let allObjects = [bed, pillow, tv, ivPole, cup, toilet, chair, window, clock, nurseCall]
+        let allObjects = [bed, pillow, tv, ivPole, cup, chair, window, clock, nurseCall]
 
         let sceneId = UUID()
         let placements: [Placement] = [
@@ -100,7 +99,6 @@ enum HospitalStarter {
             Placement(objectId: ivPole.id,    sceneId: sceneId, x: 0.76, y: 0.32, width: 0.07, height: 0.30, zIndex: 1),
             Placement(objectId: cup.id,       sceneId: sceneId, x: 0.85, y: 0.50, width: 0.08, height: 0.10, zIndex: 1),
             Placement(objectId: chair.id,     sceneId: sceneId, x: 0.06, y: 0.62, width: 0.14, height: 0.20, zIndex: 1),
-            Placement(objectId: toilet.id,    sceneId: sceneId, x: 0.78, y: 0.74, width: 0.12, height: 0.16, zIndex: 1),
         ]
 
         let habitacion = SceneTalkScene(
@@ -115,14 +113,20 @@ enum HospitalStarter {
 
     // MARK: - Helpers
 
-    /// Build a noun object with no TTS override (taps speak the label) and an
-    /// artwork key as `imageAssetName`.
-    private static func noun(_ profileId: UUID, _ label: String, _ artworkKey: String) -> SceneObject {
+    /// Build a noun object with an artwork key as `imageAssetName`. By default
+    /// taps speak the label; pass `tts:` to override pronunciation (e.g. force
+    /// "Television" instead of letter-by-letter "TV").
+    private static func noun(
+        _ profileId: UUID,
+        _ label: String,
+        _ artworkKey: String,
+        tts ttsOverride: String? = nil
+    ) -> SceneObject {
         var object = SceneObject(
             profileId: profileId,
             label: label,
             kind: .noun,
-            ttsOverride: nil
+            ttsOverride: ttsOverride
         )
         object.imageAssetName = artworkKey
         return object

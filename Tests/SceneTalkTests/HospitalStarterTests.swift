@@ -25,11 +25,6 @@ final class HospitalStarterTests: XCTestCase {
         XCTAssertTrue(result.objects.map(\.label).contains("TV"))
     }
 
-    func test_englishStarter_includesToilet() {
-        let result = HospitalStarter.seed(profileId: UUID(), language: .english)
-        XCTAssertTrue(result.objects.map(\.label).contains("Toilet"))
-    }
-
     func test_englishStarter_includesCup() {
         let result = HospitalStarter.seed(profileId: UUID(), language: .english)
         XCTAssertTrue(result.objects.map(\.label).contains("Cup"))
@@ -65,14 +60,28 @@ final class HospitalStarterTests: XCTestCase {
         )
     }
 
-    func test_starter_objectsHaveNoTtsOverride_soTapSpeaksLabel() {
+    func test_starter_objectsHaveNonEmptyTTS() {
         let result = HospitalStarter.seed(profileId: UUID(), language: .english)
         for object in result.objects {
-            XCTAssertEqual(
-                object.ttsText, object.label,
-                "Object '\(object.label)' should speak its own label, not an override"
+            XCTAssertFalse(
+                object.ttsText.isEmpty,
+                "Object '\(object.label)' must have non-empty TTS text"
             )
         }
+    }
+
+    func test_starter_TV_speaksTelevision() {
+        let result = HospitalStarter.seed(profileId: UUID(), language: .english)
+        let tv = result.objects.first { $0.label == "TV" }
+        XCTAssertEqual(tv?.ttsText, "Television",
+                       "TV should pronounce as 'Television' to avoid letter-by-letter reading")
+    }
+
+    func test_starter_IVPole_speaksLetterByLetter() {
+        let result = HospitalStarter.seed(profileId: UUID(), language: .english)
+        let ivPole = result.objects.first { $0.label == "IV pole" }
+        XCTAssertEqual(ivPole?.ttsText, "I V pole",
+                       "IV pole should pronounce 'I' and 'V' as letters")
     }
 
     func test_starter_hospitalSceneHasBackground() {
@@ -100,11 +109,6 @@ final class HospitalStarterTests: XCTestCase {
     func test_spanishStarter_includesCama() {
         let result = HospitalStarter.seed(profileId: UUID(), language: .spanish)
         XCTAssertTrue(result.objects.map(\.label).contains("Cama"))
-    }
-
-    func test_spanishStarter_includesInodoro() {
-        let result = HospitalStarter.seed(profileId: UUID(), language: .spanish)
-        XCTAssertTrue(result.objects.map(\.label).contains("Inodoro"))
     }
 
     func test_spanishStarter_includesTelevision() {

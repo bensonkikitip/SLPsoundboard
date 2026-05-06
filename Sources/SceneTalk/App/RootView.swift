@@ -81,7 +81,7 @@ struct RootView: View {
                 showPINEntry = false
                 appMode.unlockAdmin()
             }
-            .presentationDetents([.medium])
+            .presentationDetents([.large])
         }
     }
 

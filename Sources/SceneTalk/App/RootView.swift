@@ -59,31 +59,14 @@ struct RootView: View {
     // MARK: - Patient shell
 
     private func patientShell(profile: Profile) -> some View {
-        ZStack(alignment: .topTrailing) {
-            // Placeholder — full patient UI lands in slices 3–6
-            VStack(spacing: 16) {
-                Text("Patient Mode")
-                    .font(.largeTitle.bold())
-                Text("Profile: \(profile.name) · \(profile.language == .english ? "English" : "Spanish")")
-                    .foregroundStyle(.secondary)
-                Text("Scene grid + Essentials bar coming in slices 4–6")
-                    .foregroundStyle(.secondary)
-                    .font(.footnote)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            // Lock button — opens PIN entry
-            Button {
-                showPINEntry = true
-            } label: {
-                Image(systemName: "lock.fill")
-                    .imageScale(.large)
-                    .padding(16)
-                    .background(.ultraThinMaterial, in: Circle())
-            }
-            .accessibilityLabel("Admin access — enter PIN")
-            .padding()
-        }
+        SceneGridView(
+            scenes: stubScenes(for: profile),
+            objects: stubObjects(for: profile),
+            essentialsConfig: .default(language: profile.language),
+            audioService: LiveAudioService(),
+            language: profile.language,
+            onLockTapped: { showPINEntry = true }
+        )
         .sheet(isPresented: $showPINEntry) {
             PINEntryView(profile: profile) {
                 showPINEntry = false
@@ -92,6 +75,25 @@ struct RootView: View {
             .presentationDetents([.medium])
             .interactiveDismissDisabled()
         }
+    }
+
+    // MARK: - Stub data (replaced by persistent store in slice 12)
+
+    private func stubScenes(for profile: Profile) -> [SceneTalkScene] {
+        [
+            SceneTalkScene(profileId: profile.id, name: "Hospital Room"),
+            SceneTalkScene(profileId: profile.id, name: "Kitchen"),
+        ]
+    }
+
+    private func stubObjects(for profile: Profile) -> [SceneObject] {
+        [
+            SceneObject(profileId: profile.id, label: "Call nurse", kind: .phraseIntent,
+                        ttsOverride: "Please call the nurse"),
+            SceneObject(profileId: profile.id, label: "Water", kind: .noun,
+                        ttsOverride: "I need water"),
+            SceneObject(profileId: profile.id, label: "Apple", kind: .noun),
+        ]
     }
 
     // MARK: - Admin shell

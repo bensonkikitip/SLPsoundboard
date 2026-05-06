@@ -104,6 +104,16 @@ struct RootView: View {
                 availableObjects: library.objects,
                 onScenesChanged: { updated in
                     Task { try? await store.saveScenes(updated, pin: sessionPIN) }
+                },
+                saveCutout: { data, objectId in
+                    try store.saveCutout(data, profileId: profile.id, objectId: objectId)
+                },
+                saveAudio: { data, objectId in
+                    try store.saveAudio(data, profileId: profile.id, objectId: objectId)
+                },
+                onObjectAdded: { obj in
+                    library.add(obj)
+                    Task { try? await store.saveObjects(library.objects, pin: sessionPIN) }
                 }
             )
             .navigationTitle(String(localized: "Scenes"))

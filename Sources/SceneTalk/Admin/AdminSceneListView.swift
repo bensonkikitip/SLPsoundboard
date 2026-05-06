@@ -10,6 +10,13 @@ struct AdminSceneListView: View {
     let availableObjects: [SceneObject]
     /// Persist the current scene list (called on any add / edit / save).
     let onScenesChanged: ([SceneTalkScene]) -> Void
+    /// Persist a cutout PNG for a new object (forwarded to ProfileStore).
+    let saveCutout: ((Data, UUID) throws -> String)?
+    /// Persist recorded audio for a new object (forwarded to ProfileStore).
+    let saveAudio: ((Data, UUID) throws -> String)?
+    /// Called when a new object is created inside the scene editor so the
+    /// caller can persist it to the object library.
+    let onObjectAdded: ((SceneObject) -> Void)?
 
     /// Drive navigation by scene UUID (Hashable) — looks up the scene at
     /// destination time so we always edit the freshest copy.
@@ -53,7 +60,11 @@ struct AdminSceneListView: View {
             if let scene = scenes.first(where: { $0.id == sceneId }) {
                 SceneEditorView(
                     scene: scene,
-                    availableObjects: availableObjects
+                    availableObjects: availableObjects,
+                    profileId: profile.id,
+                    saveCutout: saveCutout,
+                    saveAudio: saveAudio,
+                    onObjectAdded: onObjectAdded
                 ) { updated in
                     if let idx = scenes.firstIndex(where: { $0.id == updated.id }) {
                         scenes[idx] = updated

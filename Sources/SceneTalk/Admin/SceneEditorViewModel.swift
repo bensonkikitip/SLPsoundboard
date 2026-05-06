@@ -8,7 +8,7 @@ import Observation
 final class SceneEditorViewModel {
 
     private let baseScene: SceneTalkScene
-    let availableObjects: [SceneObject]
+    private(set) var availableObjects: [SceneObject]
 
     private(set) var placements: [Placement]
     var backgroundAssetName: String?
@@ -20,6 +20,14 @@ final class SceneEditorViewModel {
         self.placements = scene.placements
         self.backgroundAssetName = scene.backgroundAssetName
         self.sceneName = scene.name
+    }
+
+    // MARK: - Object mutation
+
+    /// Add a newly-authored object to the available set, then immediately place it.
+    func addObject(_ object: SceneObject, at point: CGPoint = CGPoint(x: 0.5, y: 0.45)) {
+        availableObjects.append(object)
+        addPlacement(for: object, at: point)
     }
 
     // MARK: - Placement CRUD

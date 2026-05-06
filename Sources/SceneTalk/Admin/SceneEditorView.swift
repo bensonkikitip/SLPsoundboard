@@ -7,20 +7,35 @@ import PhotosUI
 struct SceneEditorView: View {
 
     @State private var vm: SceneEditorViewModel
+    private let profileId: UUID
+    private let saveCutout: ((Data, UUID) throws -> String)?
+    private let saveAudio: ((Data, UUID) throws -> String)?
+    private let onObjectAdded: ((SceneObject) -> Void)?
     private let onSave: (SceneTalkScene) -> Void
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedPlacementID: UUID?
     @State private var showObjectPicker = false
+    @State private var showNewObjectPipeline = false
+    @State private var showRenameAlert = false
+    @State private var pendingName = ""
     @State private var bgPhotoItem: PhotosPickerItem?
     @State private var bgImageData: Data?
 
     init(
         scene: SceneTalkScene,
         availableObjects: [SceneObject],
+        profileId: UUID,
+        saveCutout: ((Data, UUID) throws -> String)? = nil,
+        saveAudio: ((Data, UUID) throws -> String)? = nil,
+        onObjectAdded: ((SceneObject) -> Void)? = nil,
         onSave: @escaping (SceneTalkScene) -> Void
     ) {
         _vm = State(initialValue: SceneEditorViewModel(scene: scene, availableObjects: availableObjects))
+        self.profileId = profileId
+        self.saveCutout = saveCutout
+        self.saveAudio = saveAudio
+        self.onObjectAdded = onObjectAdded
         self.onSave = onSave
     }
 
@@ -30,11 +45,26 @@ struct SceneEditorView: View {
                 canvasLayer(size: geo.size)
             }
             .ignoresSafeArea(edges: .bottom)
-            .navigationTitle(vm.sceneName)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(String(localized: "Cancel")) { dismiss() }
+                }
+                // Tappable title — tap to rename
+                ToolbarItem(placement: .principal) {
+                    Button {
+                        pendingName = vm.sceneName
+                        showRenameAlert = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(vm.sceneName)
+                                .font(.headline)
+                            Image(systemName: "pencil")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(String(localized: "Save")) {
@@ -51,18 +81,54 @@ struct SceneEditorView: View {
 
                     Spacer()
 
-                    // Add object
-                    Button {
-                        showObjectPicker = true
+                    // Add object — menu with "From Library" + optional "New Object"
+                    Menu {
+                        Button {
+                            showObjectPicker = true
+                        } label: {
+                            Label(String(localized: "From Library"), systemImage: "books.vertical")
+                        }
+                        if saveCutout != nil {
+                            Button {
+                                showNewObjectPipeline = true
+                            } label: {
+                                Label(String(localized: "New Object…"), systemImage: "camera")
+                            }
+                        }
                     } label: {
                         Label(String(localized: "Add Object"), systemImage: "plus.circle.fill")
                             .font(.headline)
                     }
                 }
             }
+            .alert(String(localized: "Rename Scene"), isPresented: $showRenameAlert) {
+                TextField(String(localized: "Scene name"), text: $pendingName)
+                Button(String(localized: "Rename")) {
+                    let trimmed = pendingName.trimmingCharacters(in: .whitespaces)
+                    if !trimmed.isEmpty { vm.sceneName = trimmed }
+                }
+                Button(String(localized: "Cancel"), role: .cancel) { }
+            }
             .sheet(isPresented: $showObjectPicker) {
                 ObjectPickerSheet(objects: vm.availableObjects) { obj in
-                    vm.addPlacement(for: obj, at: CGPoint(x: 0.5, y: 0.5))
+                    vm.addPlacement(for: obj, at: CGPoint(x: 0.5, y: 0.45))
+                }
+            }
+            .sheet(isPresented: $showNewObjectPipeline) {
+                if let saveCutout, let saveAudio {
+                    CutoutPipelineView(profileId: profileId, existingObject: nil) { newObj, imageData, audioData in
+                        var saved = newObj
+                        if let data = imageData,
+                           let path = try? saveCutout(data, saved.id) {
+                            saved.imageAssetName = path
+                        }
+                        if let data = audioData,
+                           let path = try? saveAudio(data, saved.id) {
+                            saved.audioAssetName = path
+                        }
+                        onObjectAdded?(saved)
+                        vm.addObject(saved)
+                    }
                 }
             }
             .onChange(of: bgPhotoItem) { _, item in

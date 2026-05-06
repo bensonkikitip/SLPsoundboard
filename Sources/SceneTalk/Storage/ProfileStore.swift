@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UIKit
 
 /// Lightweight manifest stored in UserDefaults — contains only non-PHI metadata
 /// needed to identify which profile is present and to show the PIN entry screen.
@@ -144,6 +145,26 @@ final class ProfileStore {
         let url = dir.appendingPathComponent("\(objectId.uuidString).m4a")
         try data.write(to: url, options: [.atomic])
         return "\(profileId.uuidString)/audio/\(objectId.uuidString).m4a"
+    }
+
+    /// Persist a scene background photo. Converts to JPEG for compactness.
+    /// Returns relative asset name `"<profileId>/backgrounds/<sceneId>.jpg"`.
+    func saveBackground(_ data: Data, profileId: UUID, sceneId: UUID) throws -> String {
+        let dir = dataDirectory
+            .appendingPathComponent(profileId.uuidString)
+            .appendingPathComponent("backgrounds")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("\(sceneId.uuidString).jpg")
+        // Compress to JPEG; fall back to raw data if conversion fails
+        let toWrite: Data
+        if let uiImage = UIImage(data: data),
+           let jpeg = uiImage.jpegData(compressionQuality: 0.85) {
+            toWrite = jpeg
+        } else {
+            toWrite = data
+        }
+        try toWrite.write(to: url, options: [.atomic])
+        return "\(profileId.uuidString)/backgrounds/\(sceneId.uuidString).jpg"
     }
 
     /// Resolve an asset name (relative to documents dir) to an absolute URL,

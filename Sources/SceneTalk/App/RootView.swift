@@ -111,6 +111,9 @@ struct RootView: View {
                 saveAudio: { data, objectId in
                     try store.saveAudio(data, profileId: profile.id, objectId: objectId)
                 },
+                saveBackground: { data, sceneId in
+                    try store.saveBackground(data, profileId: profile.id, sceneId: sceneId)
+                },
                 onObjectAdded: { obj in
                     library.add(obj)
                     Task { try? await store.saveObjects(library.objects, pin: sessionPIN) }

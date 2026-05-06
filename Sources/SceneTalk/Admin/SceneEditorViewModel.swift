@@ -8,6 +8,7 @@ import Observation
 final class SceneEditorViewModel {
 
     private let baseScene: SceneTalkScene
+    var sceneId: UUID { baseScene.id }
     private(set) var availableObjects: [SceneObject]
 
     private(set) var placements: [Placement]

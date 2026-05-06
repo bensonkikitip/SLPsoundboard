@@ -14,6 +14,8 @@ struct AdminSceneListView: View {
     let saveCutout: ((Data, UUID) throws -> String)?
     /// Persist recorded audio for a new object (forwarded to ProfileStore).
     let saveAudio: ((Data, UUID) throws -> String)?
+    /// Persist a scene background photo (forwarded to ProfileStore).
+    let saveBackground: ((Data, UUID) throws -> String)?
     /// Called when a new object is created inside the scene editor so the
     /// caller can persist it to the object library.
     let onObjectAdded: ((SceneObject) -> Void)?
@@ -64,6 +66,7 @@ struct AdminSceneListView: View {
                     profileId: profile.id,
                     saveCutout: saveCutout,
                     saveAudio: saveAudio,
+                    saveBackground: saveBackground,
                     onObjectAdded: onObjectAdded
                 ) { updated in
                     if let idx = scenes.firstIndex(where: { $0.id == updated.id }) {

@@ -10,6 +10,7 @@ struct SceneEditorView: View {
     private let profileId: UUID
     private let saveCutout: ((Data, UUID) throws -> String)?
     private let saveAudio: ((Data, UUID) throws -> String)?
+    private let saveBackground: ((Data, UUID) throws -> String)?
     private let onObjectAdded: ((SceneObject) -> Void)?
     private let onSave: (SceneTalkScene) -> Void
     @Environment(\.dismiss) private var dismiss
@@ -28,6 +29,7 @@ struct SceneEditorView: View {
         profileId: UUID,
         saveCutout: ((Data, UUID) throws -> String)? = nil,
         saveAudio: ((Data, UUID) throws -> String)? = nil,
+        saveBackground: ((Data, UUID) throws -> String)? = nil,
         onObjectAdded: ((SceneObject) -> Void)? = nil,
         onSave: @escaping (SceneTalkScene) -> Void
     ) {
@@ -35,6 +37,7 @@ struct SceneEditorView: View {
         self.profileId = profileId
         self.saveCutout = saveCutout
         self.saveAudio = saveAudio
+        self.saveBackground = saveBackground
         self.onObjectAdded = onObjectAdded
         self.onSave = onSave
     }
@@ -133,7 +136,13 @@ struct SceneEditorView: View {
             }
             .onChange(of: bgPhotoItem) { _, item in
                 Task {
-                    bgImageData = try? await item?.loadTransferable(type: Data.self)
+                    guard let data = try? await item?.loadTransferable(type: Data.self) else { return }
+                    bgImageData = data
+                    // Persist to disk so the path survives Save
+                    if let saveBackground,
+                       let path = try? saveBackground(data, vm.sceneId) {
+                        vm.backgroundAssetName = path
+                    }
                 }
             }
         }

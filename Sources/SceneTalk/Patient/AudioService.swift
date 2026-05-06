@@ -46,9 +46,7 @@ final class LiveAudioService: AudioService {
     // MARK: Private
 
     private func speakTTS(text: String, language: Language) {
-        let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: language.bcp47)
-        synthesizer.speak(utterance)
+        synthesizer.speak(LocaleResolver.utterance(text: text, language: language))
     }
 
     private func documentsURL(for filename: String) -> URL? {

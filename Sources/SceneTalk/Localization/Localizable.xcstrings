@@ -1,0 +1,456 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld of 4 digits entered" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld of 4 digits entered" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld de 4 dígitos ingresados" } }
+      }
+    },
+    "Add image — coming in next step" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add image — coming in next step" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Agregar imagen — próximo paso" } }
+      }
+    },
+    "Add Object" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Object" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Agregar objeto" } }
+      }
+    },
+    "Add Object to Scene" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Object to Scene" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Agregar objeto a la escena" } }
+      }
+    },
+    "Add object" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add object" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Agregar objeto" } }
+      }
+    },
+    "Admin PIN" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Admin PIN" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "PIN de administrador" } }
+      }
+    },
+    "Admin — %@" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Admin — %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Admin — %@" } }
+      }
+    },
+    "All set!" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All set!" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¡Todo listo!" } }
+      }
+    },
+    "Back" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Atrás" } }
+      }
+    },
+    "Background" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Background" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Fondo" } }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cancelar" } }
+      }
+    },
+    "Choose from Library" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose from Library" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elegir de la biblioteca" } }
+      }
+    },
+    "Choose language" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose language" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elegir idioma" } }
+      }
+    },
+    "Confirm Cutout" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Confirm Cutout" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Confirmar recorte" } }
+      }
+    },
+    "Confirm your PIN" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Confirm your PIN" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Confirma tu PIN" } }
+      }
+    },
+    "Could not load photo. Please try again." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Could not load photo. Please try again." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudo cargar la foto. Inténtalo de nuevo." } }
+      }
+    },
+    "Create an Admin PIN" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create an Admin PIN" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear un PIN de administrador" } }
+      }
+    },
+    "Delete" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminar" } }
+      }
+    },
+    "Details" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Details" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detalles" } }
+      }
+    },
+    "Display label" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Display label" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Etiqueta visible" } }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Listo" } }
+      }
+    },
+    "Edit Object" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Object" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Editar objeto" } }
+      }
+    },
+    "Enter the patient's first name or a short nickname. This appears on the home screen." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter the patient's first name or a short nickname. This appears on the home screen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Escribe el primer nombre del paciente o un apodo corto. Aparecerá en la pantalla de inicio." } }
+      }
+    },
+    "Enter the same 4-digit PIN again to confirm." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter the same 4-digit PIN again to confirm." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ingresa el mismo PIN de 4 dígitos para confirmar." } }
+      }
+    },
+    "e.g. Apple, Call nurse" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "e.g. Apple, Call nurse" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "p. ej. Manzana, Llamar enfermera" } }
+      }
+    },
+    "Family and SLP use this to enter Admin mode and make changes." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Family and SLP use this to enter Admin mode and make changes." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La familia y el SLP usan esto para entrar al modo de administrador." } }
+      }
+    },
+    "Home" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Home" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Casa" } }
+      }
+    },
+    "Hospital" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hospital" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Hospital" } }
+      }
+    },
+    "If set, the device speaks this text instead of the label." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "If set, the device speaks this text instead of the label." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Si se establece, el dispositivo pronuncia este texto en lugar de la etiqueta." } }
+      }
+    },
+    "Image & voice" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Image & voice" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Imagen y voz" } }
+      }
+    },
+    "Label" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Label" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Etiqueta" } }
+      }
+    },
+    "Label (shown on screen)" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Label (shown on screen)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Etiqueta (visible en pantalla)" } }
+      }
+    },
+    "Language" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Idioma" } }
+      }
+    },
+    "Language Settings" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Language Settings" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Configuración de idioma" } }
+      }
+    },
+    "Leave blank to speak the label. Use this for longer phrases (e.g. Please call the nurse)." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Leave blank to speak the label. Use this for longer phrases (e.g. Please call the nurse)." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Deja en blanco para decir la etiqueta. Úsalo para frases más largas." } }
+      }
+    },
+    "Lifting subject…" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Lifting subject…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Extrayendo sujeto…" } }
+      }
+    },
+    "Lock" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Lock" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Bloquear" } }
+      }
+    },
+    "Next" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Next" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Siguiente" } }
+      }
+    },
+    "Object / item" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Object / item" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Objeto / elemento" } }
+      }
+    },
+    "Object Library" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Object Library" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Biblioteca de objetos" } }
+      }
+    },
+    "Object type" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Object type" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tipo de objeto" } }
+      }
+    },
+    "Objects & Items" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Objects & Items" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Objetos y elementos" } }
+      }
+    },
+    "Optional TTS phrase (leave blank to use label)" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional TTS phrase (leave blank to use label)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Frase TTS opcional (dejar en blanco para usar etiqueta)" } }
+      }
+    },
+    "Optional: full spoken phrase" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional: full spoken phrase" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Opcional: frase completa a pronunciar" } }
+      }
+    },
+    "Patient name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Patient name" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nombre del paciente" } }
+      }
+    },
+    "Patient name field" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Patient name field" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Campo de nombre del paciente" } }
+      }
+    },
+    "Phrase / need" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Phrase / need" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Frase / necesidad" } }
+      }
+    },
+    "Phrases & Needs" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Phrases & Needs" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Frases y necesidades" } }
+      }
+    },
+    "Ready" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ready" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Listo" } }
+      }
+    },
+    "Record Voice" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Record Voice" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Grabar voz" } }
+      }
+    },
+    "Record voice — coming in next step" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Record voice — coming in next step" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Grabar voz — próximo paso" } }
+      }
+    },
+    "Remove %@ from scene" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove %@ from scene" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Quitar %@ de la escena" } }
+      }
+    },
+    "Retake" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Retake" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Volver a tomar" } }
+      }
+    },
+    "Save" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Guardar" } }
+      }
+    },
+    "Save Object" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save Object" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Guardar objeto" } }
+      }
+    },
+    "SceneTalk will display in this language. You can change it later in Admin settings." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "SceneTalk will display in this language. You can change it later in Admin settings." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "SceneTalk se mostrará en este idioma. Puedes cambiarlo en la configuración de administrador." } }
+      }
+    },
+    "Search objects" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search objects" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscar objetos" } }
+      }
+    },
+    "Setup" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Setup" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Configuración" } }
+      }
+    },
+    "Skip — use text-to-speech instead" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Skip — use text-to-speech instead" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Omitir — usar texto a voz" } }
+      }
+    },
+    "Speech text" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Speech text" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Texto a pronunciar" } }
+      }
+    },
+    "Start Recording" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Start Recording" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar grabación" } }
+      }
+    },
+    "Start using SceneTalk" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Start using SceneTalk" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Comenzar a usar SceneTalk" } }
+      }
+    },
+    "Stays on this device only. Protected with your PIN." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stays on this device only. Protected with your PIN." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Solo en este dispositivo. Protegido con tu PIN." } }
+      }
+    },
+    "Stop Recording" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stop Recording" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detener grabación" } }
+      }
+    },
+    "Syncs to iCloud. Available across your family's devices." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Syncs to iCloud. Available across your family's devices." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Se sincroniza con iCloud. Disponible en los dispositivos de la familia." } }
+      }
+    },
+    "Tap Background below to add a photo" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap Background below to add a photo" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Toca Fondo abajo para agregar una foto" } }
+      }
+    },
+    "TTS only" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "TTS only" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Solo TTS" } }
+      }
+    },
+    "TTS override" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "TTS override" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Texto TTS alternativo" } }
+      }
+    },
+    "Type" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Type" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tipo" } }
+      }
+    },
+    "Unsupported image format." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unsupported image format." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Formato de imagen no compatible." } }
+      }
+    },
+    "Use This" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Use This" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Usar esta" } }
+      }
+    },
+    "We've set up a Hospital starter scene with common communication buttons. Tap an object to speak." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "We've set up a Hospital starter scene with common communication buttons. Tap an object to speak." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Preparamos una escena inicial de hospital con botones de comunicación comunes. Toca un objeto para hablar." } }
+      }
+    },
+    "Welcome to SceneTalk" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Welcome to SceneTalk" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Bienvenido a SceneTalk" } }
+      }
+    },
+    "Where will you use this?" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Where will you use this?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Dónde lo usarás?" } }
+      }
+    },
+    "Who is this for?" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Who is this for?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Para quién es esto?" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

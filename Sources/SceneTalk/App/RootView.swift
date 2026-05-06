@@ -10,6 +10,7 @@ struct RootView: View {
 
     @State private var appMode = AppModeState()
     @State private var showPINEntry = false
+    @State private var showAdminSettings = false
 
     /// Active profile and its seeded content, populated by the wizard.
     @State private var activeProfile: Profile? = nil
@@ -69,14 +70,41 @@ struct RootView: View {
 
     private func adminShell(profile: Profile) -> some View {
         // Admin UI shell — ObjectLibrary + SceneEditor wired in slice 12 with persistence
+        guard let idx = activeProfile.map({ _ in 0 }) else {
+            return AnyView(EmptyView())
+        }
+        _ = idx
         let library = ObjectLibrary(profileId: profile.id, objects: seededObjects)
-        return NavigationStack {
+        return AnyView(NavigationStack {
             ObjectLibraryView(
                 library: library,
                 language: profile.language,
                 onDismiss: { appMode.lockToPatient() }
             )
-        }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(String(localized: "Lock")) { appMode.lockToPatient() }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showAdminSettings = true
+                    } label: {
+                        Image(systemName: "gear")
+                    }
+                    .accessibilityLabel(String(localized: "Language Settings"))
+                }
+            }
+            .sheet(isPresented: $showAdminSettings) {
+                AdminSettingsView(
+                    profile: Binding(
+                        get: { activeProfile ?? profile },
+                        set: { activeProfile = $0 }
+                    ),
+                    onDone: { showAdminSettings = false }
+                )
+                .presentationDetents([.medium])
+            }
+        })
     }
 }
 

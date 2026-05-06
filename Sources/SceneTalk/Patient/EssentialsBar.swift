@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The always-visible strip of one-tap communication shortcuts.
 /// Position (top/bottom/leading/trailing) and content are per-profile.
@@ -75,6 +76,7 @@ private struct EssentialButton: View {
 
     var body: some View {
         Button {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             speak()
         } label: {
             VStack(spacing: 4) {

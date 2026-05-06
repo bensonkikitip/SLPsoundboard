@@ -74,12 +74,15 @@ struct SceneGridView: View {
             Image(systemName: "photo.stack")
                 .font(.system(size: 64))
                 .foregroundStyle(.secondary)
-            Text("No Scenes Yet")
+            Text(String(localized: "No Scenes Yet"))
                 .font(.title2.weight(.semibold))
-            Text("Add scenes in Admin mode to get started.")
+            Text(String(localized: "Ask your family or SLP to add scenes in Admin mode."))
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: - Lock button

@@ -66,6 +66,21 @@ The protocol abstraction over storage. Two concrete implementations: `CloudKitRe
 **`.scenetalk` bundle**
 The encrypted export file format for Profile backup (hospital mode). A single file containing: background images, cutout PNGs, audio clips, and a JSON manifest — encrypted with the Profile PIN. Restored via "Import Profile" on any device.
 
+**LocaleResolver**
+Utility type that maps a Profile's `Language` to: a BCP-47 tag, a `Locale`, a best-available `AVSpeechSynthesisVoice`, and a pre-configured `AVSpeechUtterance`. All TTS voice selection routes through `LocaleResolver` — callers never hard-code locale strings.
+
+**Layout preferences** (`LayoutPreferences`)
+Per-profile Admin setting stored inside `Profile.layoutPrefs`. Controls: `hitTargetSize` (M/L/XL — minimum tap-target dimension in Patient mode) and `essentialsBarPosition` (top/bottom/leading/trailing). Defaults to Medium / Bottom.
+
+**HitTargetSize**
+Enum with three levels (M = 88pt, L = 110pt, XL = 132pt). All meet the WCAG 2.5.5 minimum of 44pt. Larger sizes benefit patients with motor impairments or visual-field deficits.
+
+**ProfileStore**
+`@Observable` class that owns the single active profile's in-memory state. Loads on PIN entry; saves on Admin changes. Bridges `ProfileManifest` (in UserDefaults) with the encrypted repository on disk.
+
+**ProfileManifest**
+A small non-PHI struct stored in `UserDefaults`. Contains profile `id`, `name`, `storageMode`, and `pinHash`. Used to identify the profile on launch and verify the PIN quickly before attempting decryption.
+
 **Tracer-bullet slice**
 A thin vertical cut through every layer of the app (data model → storage → UI → test) that is independently buildable and demoable. V1 is broken into 18 slices.
 

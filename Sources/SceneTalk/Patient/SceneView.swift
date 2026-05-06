@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Shows a single Scene: full-bleed background + tappable object placements.
 /// Tapping an object plays its audio and shows the label prominently.
@@ -200,7 +201,10 @@ private struct ObjectTileView: View {
     @State private var isPressed = false
 
     var body: some View {
-        Button(action: onTap) {
+        Button {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            onTap()
+        } label: {
             VStack(spacing: 4) {
                 // Object image (cutout) or placeholder icon
                 objectImage

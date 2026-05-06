@@ -433,6 +433,96 @@
         "es" : { "stringUnit" : { "state" : "translated", "value" : "Preparamos una escena inicial de hospital con botones de comunicación comunes. Toca un objeto para hablar." } }
       }
     },
+    "No Scenes Yet" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Scenes Yet" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin escenas aún" } }
+      }
+    },
+    "Ask your family or SLP to add scenes in Admin mode." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ask your family or SLP to add scenes in Admin mode." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Pide a tu familia o al SLP que agregue escenas en el modo de administrador." } }
+      }
+    },
+    "Admin access" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Admin access" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Acceso de administrador" } }
+      }
+    },
+    "Back to scene list" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back to scene list" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Volver a la lista de escenas" } }
+      }
+    },
+    "Tap to speak: %@" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap to speak: %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Toca para hablar: %@" } }
+      }
+    },
+    "Enter your PIN to continue" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter your PIN to continue" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ingresa tu PIN para continuar" } }
+      }
+    },
+    "Hit target size" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hit target size" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tamaño del objetivo" } }
+      }
+    },
+    "Essentials bar position" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Essentials bar position" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Posición de la barra de esenciales" } }
+      }
+    },
+    "Layout" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Layout" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Diseño" } }
+      }
+    },
+    "Larger hit targets help patients with limited motor control." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Larger hit targets help patients with limited motor control." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Objetivos más grandes ayudan a pacientes con control motor limitado." } }
+      }
+    },
+    "Settings" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Configuración" } }
+      }
+    },
+    "Export Profile" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Export Profile" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Exportar perfil" } }
+      }
+    },
+    "Backup" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Backup" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Copia de seguridad" } }
+      }
+    },
+    "Export an encrypted backup. Share via AirDrop or Files." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Export an encrypted backup. Share via AirDrop or Files." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Exporta una copia de seguridad cifrada. Compártela por AirDrop o Archivos." } }
+      }
+    },
+    "Changes take effect the next time you return to patient mode." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Changes take effect the next time you return to patient mode." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Los cambios entran en vigor la próxima vez que regreses al modo paciente." } }
+      }
+    },
     "Welcome to SceneTalk" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Welcome to SceneTalk" } },

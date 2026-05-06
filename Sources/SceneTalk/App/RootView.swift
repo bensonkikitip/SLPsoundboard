@@ -64,7 +64,10 @@ struct RootView: View {
         SceneGridView(
             scenes: store.scenes,
             objects: store.objects,
-            essentialsConfig: .default(language: profile.language),
+            essentialsConfig: EssentialsConfig(
+                items: EssentialsConfig.default(language: profile.language).items,
+                position: profile.layoutPrefs.essentialsBarPosition
+            ),
             audioService: LiveAudioService(),
             language: profile.language,
             onLockTapped: { showPINEntry = true }

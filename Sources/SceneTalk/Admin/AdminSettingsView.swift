@@ -17,6 +17,7 @@ struct AdminSettingsView: View {
         NavigationStack {
             Form {
                 languageSection
+                layoutSection
                 if profile.storageMode == .hospital {
                     backupSection
                 }
@@ -34,6 +35,31 @@ struct AdminSettingsView: View {
                     ShareSheet(items: [url])
                 }
             }
+        }
+    }
+
+    // MARK: - Layout section
+
+    private var layoutSection: some View {
+        Section {
+            Picker(String(localized: "Hit target size"), selection: $profile.layoutPrefs.hitTargetSize) {
+                ForEach(HitTargetSize.allCases, id: \.self) { size in
+                    Text(size.displayName).tag(size)
+                }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityLabel(String(localized: "Hit target size"))
+
+            Picker(String(localized: "Essentials bar position"), selection: $profile.layoutPrefs.essentialsBarPosition) {
+                ForEach(EssentialsBarPosition.allCases, id: \.self) { pos in
+                    Text(pos.rawValue.capitalized).tag(pos)
+                }
+            }
+        } header: {
+            Text(String(localized: "Layout"))
+        } footer: {
+            Text(String(localized: "Larger hit targets help patients with limited motor control."))
+                .font(.footnote)
         }
     }
 

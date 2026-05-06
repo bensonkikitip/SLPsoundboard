@@ -41,6 +41,7 @@ struct Profile: Identifiable, Equatable, Codable, Sendable {
     var name: String
     var language: Language
     var storageMode: StorageMode
+    var layoutPrefs: LayoutPreferences
 
     /// SHA-256 hash of the 4-digit PIN.  `nil` means no PIN has been set yet.
     /// Never store or log the raw PIN.
@@ -52,12 +53,14 @@ struct Profile: Identifiable, Equatable, Codable, Sendable {
         id: UUID = UUID(),
         name: String,
         language: Language,
-        storageMode: StorageMode
+        storageMode: StorageMode,
+        layoutPrefs: LayoutPreferences = LayoutPreferences()
     ) {
         self.id = id
         self.name = name
         self.language = language
         self.storageMode = storageMode
+        self.layoutPrefs = layoutPrefs
         self.pinHash = nil
     }
 

@@ -6,6 +6,11 @@ struct ObjectLibraryView: View {
 
     @Bindable var library: ObjectLibrary
     let language: Language
+    /// Persist cutout PNG bytes for an object. Returns relative asset path.
+    /// Caller (RootView) wires this to `ProfileStore.saveCutout`.
+    let saveCutout: (Data, UUID) throws -> String
+    /// Persist audio bytes for an object. Returns relative asset path.
+    let saveAudio: (Data, UUID) throws -> String
     let onDismiss: () -> Void
 
     @State private var showAddSheet = false
@@ -43,19 +48,29 @@ struct ObjectLibraryView: View {
                 }
             }
             .sheet(isPresented: $showAddSheet) {
-                ObjectEditView(
+                CutoutPipelineView(
                     profileId: library.profileId,
-                    existingObject: nil,
-                    language: language
-                ) { newObj in
-                    library.add(newObj)
+                    existingObject: nil
+                ) { newObj, imageData, audioData in
+                    var saved = newObj
+                    if let data = imageData,
+                       let path = try? saveCutout(data, saved.id) {
+                        saved.imageAssetName = path
+                    }
+                    if let data = audioData,
+                       let path = try? saveAudio(data, saved.id) {
+                        saved.audioAssetName = path
+                    }
+                    library.add(saved)
                 }
             }
             .sheet(item: $editingObject) { obj in
                 ObjectEditView(
                     profileId: library.profileId,
                     existingObject: obj,
-                    language: language
+                    language: language,
+                    saveCutout: saveCutout,
+                    saveAudio: saveAudio
                 ) { updated in
                     library.update(updated)
                 }
@@ -94,20 +109,8 @@ private struct ObjectRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Image thumbnail
-            ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.secondary.opacity(0.12))
-                    .frame(width: 50, height: 50)
-                if object.imageAssetName != nil {
-                    // Actual image loaded in slice 8
-                    Image(systemName: "photo")
-                        .foregroundStyle(.secondary)
-                } else {
-                    Image(systemName: object.kind == .phraseIntent ? "bubble.left.fill" : "photo")
-                        .foregroundStyle(.secondary)
-                }
-            }
+            ObjectThumbnailView(object: object)
+                .frame(width: 56, height: 56)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(object.label)
@@ -142,28 +145,47 @@ struct ObjectEditView: View {
     let profileId: UUID
     let existingObject: SceneObject?
     let language: Language
+    let saveCutout: (Data, UUID) throws -> String
+    let saveAudio: (Data, UUID) throws -> String
     let onSave: (SceneObject) -> Void
 
     @State private var label: String
     @State private var kind: ObjectKind
     @State private var ttsOverride: String
+    @State private var imageAssetName: String?
+    @State private var audioAssetName: String?
+    @State private var showReplaceImageSheet = false
     @Environment(\.dismiss) private var dismiss
 
     private var isNew: Bool { existingObject == nil }
+
+    /// Snapshot of the current object state for thumbnail rendering.
+    private var workingObject: SceneObject {
+        var obj = existingObject ?? SceneObject(profileId: profileId, label: label, kind: kind)
+        obj.imageAssetName = imageAssetName
+        obj.audioAssetName = audioAssetName
+        return obj
+    }
 
     init(
         profileId: UUID,
         existingObject: SceneObject?,
         language: Language,
+        saveCutout: @escaping (Data, UUID) throws -> String,
+        saveAudio: @escaping (Data, UUID) throws -> String,
         onSave: @escaping (SceneObject) -> Void
     ) {
         self.profileId = profileId
         self.existingObject = existingObject
         self.language = language
+        self.saveCutout = saveCutout
+        self.saveAudio = saveAudio
         self.onSave = onSave
         _label = State(initialValue: existingObject?.label ?? "")
         _kind = State(initialValue: existingObject?.kind ?? .noun)
         _ttsOverride = State(initialValue: existingObject?.ttsOverride ?? "")
+        _imageAssetName = State(initialValue: existingObject?.imageAssetName)
+        _audioAssetName = State(initialValue: existingObject?.audioAssetName)
     }
 
     var body: some View {
@@ -190,11 +212,37 @@ struct ObjectEditView: View {
                     Text(String(localized: "If set, the device speaks this text instead of the label."))
                 }
 
-                Section(String(localized: "Image & voice")) {
-                    Label(String(localized: "Add image — coming in next step"), systemImage: "camera")
-                        .foregroundStyle(.secondary)
-                    Label(String(localized: "Record voice — coming in next step"), systemImage: "waveform")
-                        .foregroundStyle(.secondary)
+                Section(String(localized: "Image")) {
+                    HStack(spacing: 12) {
+                        ObjectThumbnailView(object: workingObject)
+                            .frame(width: 56, height: 56)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(imageAssetName?.hasPrefix("art:") == true
+                                 ? String(localized: "Built-in artwork")
+                                 : (imageAssetName == nil
+                                    ? String(localized: "No image yet")
+                                    : String(localized: "Custom cutout")))
+                                .font(.subheadline.weight(.medium))
+                            Text(imageAssetName == nil
+                                 ? String(localized: "Tap Replace to add a photo cutout")
+                                 : String(localized: "Tap Replace to update"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                    }
+
+                    Button {
+                        showReplaceImageSheet = true
+                    } label: {
+                        Label(
+                            imageAssetName == nil
+                                ? String(localized: "Add image…")
+                                : String(localized: "Replace image…"),
+                            systemImage: "camera"
+                        )
+                    }
                 }
             }
             .navigationTitle(isNew ? String(localized: "New Object") : String(localized: "Edit Object"))
@@ -211,6 +259,22 @@ struct ObjectEditView: View {
                     .fontWeight(.semibold)
                 }
             }
+            .sheet(isPresented: $showReplaceImageSheet) {
+                CutoutPipelineView(
+                    profileId: profileId,
+                    existingObject: existingObject
+                ) { _, imageData, audioData in
+                    let targetId = existingObject?.id ?? UUID()
+                    if let data = imageData,
+                       let path = try? saveCutout(data, targetId) {
+                        imageAssetName = path
+                    }
+                    if let data = audioData,
+                       let path = try? saveAudio(data, targetId) {
+                        audioAssetName = path
+                    }
+                }
+            }
         }
     }
 
@@ -219,7 +283,61 @@ struct ObjectEditView: View {
         obj.label = label.trimmingCharacters(in: .whitespaces)
         obj.kind = kind
         obj.ttsOverride = ttsOverride.trimmingCharacters(in: .whitespaces).isEmpty ? nil : ttsOverride.trimmingCharacters(in: .whitespaces)
+        // Carry through any image / audio assets captured via Replace
+        if let path = imageAssetName { obj.imageAssetName = path }
+        if let path = audioAssetName { obj.audioAssetName = path }
         onSave(obj)
         dismiss()
+    }
+}
+
+// MARK: - Shared thumbnail
+
+/// Shared object thumbnail used by ObjectRow and ObjectEditView.
+/// Priority: artwork key → user cutout PNG → SF symbol → placeholder.
+struct ObjectThumbnailView: View {
+    let object: SceneObject
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.secondary.opacity(0.12))
+
+            content
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+            if object.artworkKey != nil {
+                SceneObjectArtworkView(object: object, width: w, height: h)
+            } else if let assetName = object.imageAssetName,
+                      !assetName.hasPrefix("art:"),
+                      !assetName.hasPrefix("sfsymbol:"),
+                      let url = FileManager.default
+                        .urls(for: .documentDirectory, in: .userDomainMask)
+                        .first?.appendingPathComponent(assetName),
+                      let uiImage = UIImage(contentsOfFile: url.path) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(4)
+                    .frame(width: w, height: h)
+            } else if let sfName = object.systemImageName {
+                Image(systemName: sfName)
+                    .imageScale(.large)
+                    .foregroundStyle(.primary)
+                    .frame(width: w, height: h)
+            } else {
+                Image(systemName: object.kind == .phraseIntent ? "bubble.left.fill" : "photo")
+                    .imageScale(.large)
+                    .foregroundStyle(.secondary)
+                    .frame(width: w, height: h)
+            }
+        }
     }
 }

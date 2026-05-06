@@ -12,6 +12,7 @@ struct RootView: View {
     @State private var appMode = AppModeState()
     @State private var showPINEntry = false
     @State private var showAdminSettings = false
+    @State private var showObjectLibrary = false
 
     /// Raw PIN captured during wizard — held in memory only, never written to disk as plaintext.
     @State private var sessionPIN: String = ""
@@ -89,18 +90,24 @@ struct RootView: View {
 
     private func adminShell(profile: Profile) -> some View {
         let library = ObjectLibrary(profileId: profile.id, objects: store.objects)
+        let scenesBinding = Binding<[SceneTalkScene]>(
+            get: { store.scenes },
+            set: { newValue in
+                Task { try? await store.saveScenes(newValue, pin: sessionPIN) }
+            }
+        )
+
         return NavigationStack {
-            ObjectLibraryView(
-                library: library,
-                language: profile.language,
-                onDismiss: {
-                    // Persist any library changes before locking
-                    Task {
-                        try? await store.saveObjects(library.objects, pin: sessionPIN)
-                    }
-                    appMode.lockToPatient()
+            AdminSceneListView(
+                profile: profile,
+                scenes: scenesBinding,
+                availableObjects: library.objects,
+                onScenesChanged: { updated in
+                    Task { try? await store.saveScenes(updated, pin: sessionPIN) }
                 }
             )
+            .navigationTitle(String(localized: "Scenes"))
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(String(localized: "Lock")) {
@@ -109,10 +116,35 @@ struct RootView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
+                    Button { showObjectLibrary = true } label: {
+                        Image(systemName: "books.vertical")
+                    }
+                    .accessibilityLabel(String(localized: "Object Library"))
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { showAdminSettings = true } label: {
                         Image(systemName: "gear")
                     }
-                    .accessibilityLabel(String(localized: "Language Settings"))
+                    .accessibilityLabel(String(localized: "Settings"))
+                }
+            }
+            .sheet(isPresented: $showObjectLibrary) {
+                ObjectLibraryView(
+                    library: library,
+                    language: profile.language,
+                    saveCutout: { data, objectId in
+                        try store.saveCutout(data, profileId: profile.id, objectId: objectId)
+                    },
+                    saveAudio: { data, objectId in
+                        try store.saveAudio(data, profileId: profile.id, objectId: objectId)
+                    },
+                    onDismiss: {
+                        Task { try? await store.saveObjects(library.objects, pin: sessionPIN) }
+                        showObjectLibrary = false
+                    }
+                )
+                .onDisappear {
+                    Task { try? await store.saveObjects(library.objects, pin: sessionPIN) }
                 }
             }
             .sheet(isPresented: $showAdminSettings) {

@@ -111,6 +111,48 @@ final class ProfileStore {
         self.scenes = updatedScenes
     }
 
+    // MARK: - Cutout & audio asset persistence
+    //
+    // Cutout PNGs and recorded voice clips live as plain files under
+    //   <dataDirectory>/<profileId>/cutouts/<objectId>.png
+    //   <dataDirectory>/<profileId>/audio/<objectId>.m4a
+    //
+    // The returned relative path is what the caller stores into the object's
+    // `imageAssetName` / `audioAssetName`. View code resolves that path
+    // against the documents directory (same convention as SceneView).
+    //
+    // Encryption-at-rest for these binary blobs is deferred — V1's PHI
+    // contract is the encrypted export bundle (`.scenetalk`), not at-rest.
+
+    /// Persist cutout PNG bytes for an object. Returns relative asset name.
+    func saveCutout(_ data: Data, profileId: UUID, objectId: UUID) throws -> String {
+        let dir = dataDirectory
+            .appendingPathComponent(profileId.uuidString)
+            .appendingPathComponent("cutouts")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("\(objectId.uuidString).png")
+        try data.write(to: url, options: [.atomic])
+        return "\(profileId.uuidString)/cutouts/\(objectId.uuidString).png"
+    }
+
+    /// Persist recorded audio bytes for an object. Returns relative asset name.
+    func saveAudio(_ data: Data, profileId: UUID, objectId: UUID) throws -> String {
+        let dir = dataDirectory
+            .appendingPathComponent(profileId.uuidString)
+            .appendingPathComponent("audio")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("\(objectId.uuidString).m4a")
+        try data.write(to: url, options: [.atomic])
+        return "\(profileId.uuidString)/audio/\(objectId.uuidString).m4a"
+    }
+
+    /// Resolve an asset name (relative to documents dir) to an absolute URL,
+    /// or nil if the file doesn't exist.
+    func assetURL(forRelativePath path: String) -> URL? {
+        let url = dataDirectory.appendingPathComponent(path)
+        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
     // MARK: - Clear (for tests / profile deletion)
 
     func clear() {

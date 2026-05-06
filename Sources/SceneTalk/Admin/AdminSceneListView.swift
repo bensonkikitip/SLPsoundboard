@@ -20,9 +20,11 @@ struct AdminSceneListView: View {
     /// caller can persist it to the object library.
     let onObjectAdded: ((SceneObject) -> Void)?
 
-    /// Drive navigation by scene UUID (Hashable) — looks up the scene at
-    /// destination time so we always edit the freshest copy.
+    /// Drive navigation by scene UUID (Hashable).
     @State private var navigationTarget: UUID?
+    /// Newly-created scenes that haven't been flushed to store.scenes yet.
+    /// Keyed by scene ID so the navigationDestination lookup never misses them.
+    @State private var pendingScenes: [UUID: SceneTalkScene] = [:]
 
     private let columns = [
         GridItem(.adaptive(minimum: 220, maximum: 320), spacing: 20)
@@ -47,8 +49,10 @@ struct AdminSceneListView: View {
                         name: String(localized: "New Scene"),
                         backgroundAssetName: nil
                     )
-                    scenes.append(newScene)
-                    onScenesChanged(scenes)
+                    // Cache locally so navigationDestination can find the scene
+                    // before the async binding save flushes to store.scenes.
+                    pendingScenes[newScene.id] = newScene
+                    scenes.append(newScene)  // async persist via binding setter
                     navigationTarget = newScene.id
                 } label: {
                     NewSceneTile()
@@ -59,7 +63,11 @@ struct AdminSceneListView: View {
             .padding(20)
         }
         .navigationDestination(item: $navigationTarget) { sceneId in
-            if let scene = scenes.first(where: { $0.id == sceneId }) {
+            // Check store.scenes first; fall back to pendingScenes so newly-
+            // created scenes are reachable before the async save completes.
+            let scene = scenes.first(where: { $0.id == sceneId })
+                     ?? pendingScenes[sceneId]
+            if let scene {
                 SceneEditorView(
                     scene: scene,
                     availableObjects: availableObjects,
@@ -69,12 +77,21 @@ struct AdminSceneListView: View {
                     saveBackground: saveBackground,
                     onObjectAdded: onObjectAdded
                 ) { updated in
-                    if let idx = scenes.firstIndex(where: { $0.id == updated.id }) {
-                        scenes[idx] = updated
+                    // Clean up the pending cache for this scene.
+                    pendingScenes.removeValue(forKey: updated.id)
+
+                    // Build the authoritative updated array from the current
+                    // store snapshot, then assign it once via the binding.
+                    // A single assignment = a single async save — no race
+                    // condition from a second onScenesChanged call.
+                    var current = scenes
+                    if let idx = current.firstIndex(where: { $0.id == updated.id }) {
+                        current[idx] = updated
                     } else {
-                        scenes.append(updated)
+                        current.append(updated)
                     }
-                    onScenesChanged(scenes)
+                    scenes = current        // one authoritative save via binding setter
+                    navigationTarget = nil  // explicit pop (don't rely on dismiss())
                 }
             } else {
                 // Scene was deleted while navigating — pop back gracefully

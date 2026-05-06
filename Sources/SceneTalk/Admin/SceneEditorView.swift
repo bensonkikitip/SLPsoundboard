@@ -50,6 +50,7 @@ struct SceneEditorView: View {
             canvasLayer(size: geo.size)
         }
         .ignoresSafeArea(edges: .bottom)
+        .navigationTitle(vm.sceneName)       // drives the back-button label in parent
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {

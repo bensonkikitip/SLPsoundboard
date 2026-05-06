@@ -217,26 +217,37 @@ private struct EditablePlacementView: View {
     @ViewBuilder
     private var objectContent: some View {
         VStack(spacing: 2) {
-            if let sfName = object.systemImageName {
-                Image(systemName: sfName)
-                    .font(.system(size: liveW * 0.30))
-                    .foregroundStyle(.white.opacity(0.9))
-                    .frame(width: liveW * 0.75, height: liveH * 0.65)
-            } else if let assetName = object.imageAssetName,
-               let url = FileManager.default
-                .urls(for: .documentDirectory, in: .userDomainMask)
-                .first?.appendingPathComponent(assetName),
-               let uiImage = UIImage(contentsOfFile: url.path) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: liveW * 0.75, height: liveH * 0.65)
-            } else {
-                Image(systemName: object.kind == .phraseIntent ? "bubble.left.fill" : "photo")
-                    .font(.system(size: liveW * 0.28))
-                    .foregroundStyle(.white.opacity(0.9))
-                    .frame(width: liveW * 0.75, height: liveH * 0.65)
+            Group {
+                if object.artworkKey != nil {
+                    // SwiftUI-drawn artwork (seeded props like bed, tv, etc.)
+                    SceneObjectArtworkView(object: object, width: liveW * 0.75, height: liveH * 0.65)
+                } else if let assetName = object.imageAssetName,
+                          !assetName.hasPrefix("art:"),
+                          !assetName.hasPrefix("sfsymbol:"),
+                          let url = FileManager.default
+                            .urls(for: .documentDirectory, in: .userDomainMask)
+                            .first?.appendingPathComponent(assetName),
+                          let uiImage = UIImage(contentsOfFile: url.path) {
+                    // User-authored cutout PNG
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: liveW * 0.75, height: liveH * 0.65)
+                } else if let sfName = object.systemImageName {
+                    // Legacy SF symbol object
+                    Image(systemName: sfName)
+                        .font(.system(size: liveW * 0.30))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .frame(width: liveW * 0.75, height: liveH * 0.65)
+                } else {
+                    // Neutral placeholder
+                    Image(systemName: object.kind == .phraseIntent ? "bubble.left.fill" : "photo")
+                        .font(.system(size: liveW * 0.28))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .frame(width: liveW * 0.75, height: liveH * 0.65)
+                }
             }
+            .frame(width: liveW * 0.75, height: liveH * 0.65)
 
             Text(object.label)
                 .font(.caption.weight(.semibold))
@@ -301,10 +312,11 @@ private struct ObjectPickerSheet: View {
     var body: some View {
         NavigationStack {
             List(objects) { obj in
-                HStack {
-                    Image(systemName: obj.kind == .phraseIntent ? "bubble.left.fill" : "photo")
-                        .foregroundStyle(.secondary)
+                HStack(spacing: 12) {
+                    ObjectThumbnailView(object: obj)
+                        .frame(width: 44, height: 44)
                     Text(obj.label)
+                        .font(.body)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {

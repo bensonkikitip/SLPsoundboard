@@ -69,7 +69,7 @@ final class ProfileStore {
 
         self.profile = loadedProfile
         self.objects = (try? await repo.loadObjects(profileId: mf.id)) ?? []
-        self.scenes  = (try? await repo.loadScenes(profileId: mf.id)) ?? []
+        self.scenes  = migrateBackgrounds((try? await repo.loadScenes(profileId: mf.id)) ?? [])
         return true
     }
 
@@ -119,6 +119,28 @@ final class ProfileStore {
         profile  = nil
         objects  = []
         scenes   = []
+    }
+
+    // MARK: - Migrations
+
+    /// Patches scenes loaded from pre-background-era saves so they show procedural
+    /// backgrounds without requiring the user to reset their profile.
+    private func migrateBackgrounds(_ scenes: [SceneTalkScene]) -> [SceneTalkScene] {
+        scenes.map { scene in
+            guard scene.backgroundAssetName == nil else { return scene }
+            var copy = scene
+            switch scene.name {
+            case "Hospital Room", "Habitación Hospital":
+                copy.backgroundAssetName = "procedural:hospital"
+            case "Kitchen", "Cocina":
+                copy.backgroundAssetName = "procedural:kitchen"
+            case "Living Room", "Sala":
+                copy.backgroundAssetName = "procedural:living"
+            default:
+                break
+            }
+            return copy
+        }
     }
 
     // MARK: - UserDefaults helpers

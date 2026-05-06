@@ -225,6 +225,7 @@ private struct ObjectTileView: View {
             }
             .frame(width: width, height: height)
         }
+        .background(.black.opacity(0.28), in: RoundedRectangle(cornerRadius: 14))
         .buttonStyle(.plain)
         .scaleEffect(isPressed ? 0.93 : 1.0)
         .animation(.easeOut(duration: 0.1), value: isPressed)
@@ -239,17 +240,28 @@ private struct ObjectTileView: View {
 
     @ViewBuilder
     private var objectImage: some View {
-        if let assetName = object.imageAssetName,
-           let url = FileManager.default
-                .urls(for: .documentDirectory, in: .userDomainMask)
-                .first?
-                .appendingPathComponent(assetName),
-           let uiImage = UIImage(contentsOfFile: url.path) {
+        if let sfName = object.systemImageName {
+            // Object has a seeded SF Symbol — render it in a styled tile
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(.black.opacity(0.30))
+                Image(systemName: sfName)
+                    .font(.system(size: width * 0.26))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.4), radius: 2)
+            }
+            .frame(width: width * 0.82, height: height * 0.65)
+        } else if let assetName = object.imageAssetName,
+                  let url = FileManager.default
+                    .urls(for: .documentDirectory, in: .userDomainMask)
+                    .first?
+                    .appendingPathComponent(assetName),
+                  let uiImage = UIImage(contentsOfFile: url.path) {
             Image(uiImage: uiImage)
                 .resizable()
                 .scaledToFit()
         } else {
-            // Placeholder icon until cutout is authored
+            // Generic placeholder until cutout is authored
             Image(systemName: object.kind == .phraseIntent ? "bubble.left.fill" : "photo")
                 .font(.system(size: width * 0.3))
                 .foregroundStyle(.white.opacity(0.85))

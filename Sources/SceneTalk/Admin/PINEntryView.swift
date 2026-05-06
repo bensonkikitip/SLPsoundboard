@@ -9,6 +9,7 @@ struct PINEntryView: View {
 
     // Shake animation state
     @State private var shakeTrigger: Int = 0
+    @Environment(\.dismiss) private var dismiss
 
     init(profile: Profile, onUnlock: @escaping () -> Void) {
         _vm = State(initialValue: AdminGateViewModel(profile: profile))
@@ -19,14 +20,21 @@ struct PINEntryView: View {
 
     var body: some View {
         VStack(spacing: 40) {
+            // Cancel row
+            HStack {
+                Spacer()
+                Button(String(localized: "Cancel")) { dismiss() }
+                    .padding([.top, .trailing], 20)
+            }
+
             Spacer()
 
             // Title
-            Text("Admin Access")
+            Text(String(localized: "Admin Access"))
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(.primary)
 
-            Text("Enter PIN to edit this profile")
+            Text(String(localized: "Enter PIN to edit this profile"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 

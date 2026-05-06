@@ -114,6 +114,15 @@ struct SceneEditorView: View {
                         )
                     )
                 },
+                onResize: { normDelta in
+                    let newW = placement.width + normDelta.width
+                    let newH = placement.height + normDelta.height
+                    vm.resizePlacement(
+                        id: placement.id,
+                        width:  max(0.04, min(0.9, newW)),
+                        height: max(0.04, min(0.9, newH))
+                    )
+                },
                 onDelete: {
                     vm.deletePlacement(id: placement.id)
                     selectedPlacementID = nil
@@ -130,6 +139,9 @@ struct SceneEditorView: View {
             Image(uiImage: uiImage)
                 .resizable()
                 .scaledToFill()
+                .ignoresSafeArea()
+        } else if let style = ProceduralBackground.style(from: vm.backgroundAssetName) {
+            ProceduralSceneBackgroundView(style: style)
                 .ignoresSafeArea()
         } else if let assetName = vm.backgroundAssetName,
                   let url = FileManager.default
@@ -166,14 +178,20 @@ private struct EditablePlacementView: View {
     let isSelected: Bool
     let onTap: () -> Void
     let onMove: (CGSize) -> Void
+    let onResize: (CGSize) -> Void
     let onDelete: () -> Void
 
     @GestureState private var dragOffset: CGSize = .zero
+    @GestureState private var resizeDelta: CGSize = .zero
 
     private var x: CGFloat { placement.x * containerSize.width }
     private var y: CGFloat { placement.y * containerSize.height }
     private var w: CGFloat { placement.width * containerSize.width }
     private var h: CGFloat { placement.height * containerSize.height }
+
+    // Live dimensions during resize drag
+    private var liveW: CGFloat { max(48, w + resizeDelta.width) }
+    private var liveH: CGFloat { max(48, h + resizeDelta.height) }
 
     var body: some View {
         ZStack {
@@ -183,10 +201,10 @@ private struct EditablePlacementView: View {
                 selectionOverlay
             }
         }
-        .frame(width: w, height: h)
+        .frame(width: liveW, height: liveH)
         .position(
-            x: x + w / 2 + dragOffset.width,
-            y: y + h / 2 + dragOffset.height
+            x: x + liveW / 2 + dragOffset.width,
+            y: y + liveH / 2 + dragOffset.height
         )
         .gesture(
             DragGesture()
@@ -199,7 +217,12 @@ private struct EditablePlacementView: View {
     @ViewBuilder
     private var objectContent: some View {
         VStack(spacing: 2) {
-            if let assetName = object.imageAssetName,
+            if let sfName = object.systemImageName {
+                Image(systemName: sfName)
+                    .font(.system(size: liveW * 0.30))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .frame(width: liveW * 0.75, height: liveH * 0.65)
+            } else if let assetName = object.imageAssetName,
                let url = FileManager.default
                 .urls(for: .documentDirectory, in: .userDomainMask)
                 .first?.appendingPathComponent(assetName),
@@ -207,12 +230,12 @@ private struct EditablePlacementView: View {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: w * 0.75, height: h * 0.65)
+                    .frame(width: liveW * 0.75, height: liveH * 0.65)
             } else {
                 Image(systemName: object.kind == .phraseIntent ? "bubble.left.fill" : "photo")
-                    .font(.system(size: w * 0.28))
+                    .font(.system(size: liveW * 0.28))
                     .foregroundStyle(.white.opacity(0.9))
-                    .frame(width: w * 0.75, height: h * 0.65)
+                    .frame(width: liveW * 0.75, height: liveH * 0.65)
             }
 
             Text(object.label)
@@ -229,7 +252,7 @@ private struct EditablePlacementView: View {
                 .stroke(Color.accentColor, lineWidth: 2)
                 .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
 
-            // Delete button
+            // Delete button — top-right
             Button(action: onDelete) {
                 Image(systemName: "xmark.circle.fill")
                     .foregroundStyle(.white, .red)
@@ -237,7 +260,33 @@ private struct EditablePlacementView: View {
             }
             .offset(x: 10, y: -10)
             .accessibilityLabel(String(localized: "Remove \(object.label) from scene"))
+
+            // Resize handle — bottom-right corner
+            resizeHandle
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                .offset(x: 10, y: 10)
         }
+    }
+
+    private var resizeHandle: some View {
+        Image(systemName: "arrow.up.left.and.arrow.down.right")
+            .font(.caption.weight(.bold))
+            .foregroundStyle(.white)
+            .padding(5)
+            .background(Color.accentColor, in: Circle())
+            .gesture(
+                DragGesture()
+                    .updating($resizeDelta) { value, state, _ in
+                        state = value.translation
+                    }
+                    .onEnded { value in
+                        // Convert pixel delta → normalised delta for the VM
+                        let dw = value.translation.width / containerSize.width
+                        let dh = value.translation.height / containerSize.height
+                        onResize(CGSize(width: dw, height: dh))
+                    }
+            )
+            .accessibilityLabel(String(localized: "Resize \(object.label)"))
     }
 }
 

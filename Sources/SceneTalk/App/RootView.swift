@@ -22,11 +22,15 @@ struct RootView: View {
                 profileLoaded
             } else if store.hasProfile {
                 // Manifest exists but data not yet decrypted — prompt for PIN
-                PINUnlockView(manifest: store.manifest!) { pin in
-                    let ok = await store.load(pin: pin)
-                    if ok { sessionPIN = pin }
-                    return ok
-                }
+                PINUnlockView(
+                    manifest: store.manifest!,
+                    onUnlock: { pin in
+                        let ok = await store.load(pin: pin)
+                        if ok { sessionPIN = pin }
+                        return ok
+                    },
+                    onReset: { store.clear() }
+                )
             } else {
                 // First launch — run setup wizard
                 WizardView { profile, pin, seed in
@@ -78,7 +82,6 @@ struct RootView: View {
                 appMode.unlockAdmin()
             }
             .presentationDetents([.medium])
-            .interactiveDismissDisabled()
         }
     }
 

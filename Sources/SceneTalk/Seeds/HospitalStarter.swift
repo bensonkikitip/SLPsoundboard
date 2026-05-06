@@ -39,23 +39,39 @@ enum HospitalStarter {
         let allObjects = [callNurse, needBath, inPain, adjustBed, needWater, needPillow, tvPlease,
                           bed, waterCup, ivPole, famChair]
 
-        // Place the key phrase-intent objects in a 3-column layout
+        // ── Contextual placement ──────────────────────────────────────────────
+        // Imagine a hospital room from the foot of the bed (landscape iPad):
+        //   • Headboard / nurse call: upper-left  • TV: upper-right
+        //   • Bed center: mid-canvas              • IV pole: right edge
+        //   • Nightstand/water: right-center      • Bathroom door: lower-right
+        //   • Family chair: lower-left
         let sceneId = UUID()
         let placements: [Placement] = [
-            Placement(objectId: callNurse.id,  sceneId: sceneId, x: 0.08, y: 0.12, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: inPain.id,     sceneId: sceneId, x: 0.40, y: 0.12, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: needBath.id,   sceneId: sceneId, x: 0.70, y: 0.12, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: needWater.id,  sceneId: sceneId, x: 0.08, y: 0.42, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: adjustBed.id,  sceneId: sceneId, x: 0.40, y: 0.42, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: needPillow.id, sceneId: sceneId, x: 0.70, y: 0.42, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: tvPlease.id,   sceneId: sceneId, x: 0.08, y: 0.72, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: waterCup.id,   sceneId: sceneId, x: 0.70, y: 0.72, width: 0.14, height: 0.14, zIndex: 0),
+            // Nurse call button is at the headboard — upper-left
+            Placement(objectId: callNurse.id,  sceneId: sceneId, x: 0.05, y: 0.10, width: 0.22, height: 0.22, zIndex: 1),
+            // Pain indicator — above the patient's head area
+            Placement(objectId: inPain.id,     sceneId: sceneId, x: 0.38, y: 0.10, width: 0.22, height: 0.22, zIndex: 1),
+            // Pillow request — near headboard, upper-center
+            Placement(objectId: needPillow.id, sceneId: sceneId, x: 0.22, y: 0.10, width: 0.20, height: 0.20, zIndex: 1),
+            // TV is wall-mounted upper-right
+            Placement(objectId: tvPlease.id,   sceneId: sceneId, x: 0.68, y: 0.08, width: 0.22, height: 0.22, zIndex: 1),
+            // Adjust bed — center-lower (bed controls at foot of bed)
+            Placement(objectId: adjustBed.id,  sceneId: sceneId, x: 0.38, y: 0.62, width: 0.22, height: 0.22, zIndex: 1),
+            // Water cup on the right nightstand
+            Placement(objectId: needWater.id,  sceneId: sceneId, x: 0.72, y: 0.38, width: 0.22, height: 0.22, zIndex: 1),
+            // Bathroom door — lower-right
+            Placement(objectId: needBath.id,   sceneId: sceneId, x: 0.72, y: 0.68, width: 0.22, height: 0.22, zIndex: 1),
+            // Ambient nouns
+            Placement(objectId: waterCup.id,   sceneId: sceneId, x: 0.80, y: 0.48, width: 0.12, height: 0.12, zIndex: 0),
+            Placement(objectId: ivPole.id,     sceneId: sceneId, x: 0.88, y: 0.20, width: 0.10, height: 0.18, zIndex: 0),
+            Placement(objectId: famChair.id,   sceneId: sceneId, x: 0.04, y: 0.62, width: 0.14, height: 0.18, zIndex: 0),
         ]
 
         let hospitalRoom = SceneTalkScene(
             id: sceneId,
             profileId: profileId,
             name: "Hospital Room",
+            backgroundAssetName: "procedural:hospital",
             placements: placements
         )
         return SeedResult(objects: allObjects, scenes: [hospitalRoom])
@@ -81,20 +97,23 @@ enum HospitalStarter {
 
         let sceneId = UUID()
         let placements: [Placement] = [
-            Placement(objectId: callNurse.id,  sceneId: sceneId, x: 0.08, y: 0.12, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: inPain.id,     sceneId: sceneId, x: 0.40, y: 0.12, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: needBath.id,   sceneId: sceneId, x: 0.70, y: 0.12, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: needWater.id,  sceneId: sceneId, x: 0.08, y: 0.42, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: adjustBed.id,  sceneId: sceneId, x: 0.40, y: 0.42, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: needPillow.id, sceneId: sceneId, x: 0.70, y: 0.42, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: tvPlease.id,   sceneId: sceneId, x: 0.08, y: 0.72, width: 0.22, height: 0.22, zIndex: 1),
-            Placement(objectId: waterCup.id,   sceneId: sceneId, x: 0.70, y: 0.72, width: 0.14, height: 0.14, zIndex: 0),
+            Placement(objectId: callNurse.id,  sceneId: sceneId, x: 0.05, y: 0.10, width: 0.22, height: 0.22, zIndex: 1),
+            Placement(objectId: inPain.id,     sceneId: sceneId, x: 0.38, y: 0.10, width: 0.22, height: 0.22, zIndex: 1),
+            Placement(objectId: needPillow.id, sceneId: sceneId, x: 0.22, y: 0.10, width: 0.20, height: 0.20, zIndex: 1),
+            Placement(objectId: tvPlease.id,   sceneId: sceneId, x: 0.68, y: 0.08, width: 0.22, height: 0.22, zIndex: 1),
+            Placement(objectId: adjustBed.id,  sceneId: sceneId, x: 0.38, y: 0.62, width: 0.22, height: 0.22, zIndex: 1),
+            Placement(objectId: needWater.id,  sceneId: sceneId, x: 0.72, y: 0.38, width: 0.22, height: 0.22, zIndex: 1),
+            Placement(objectId: needBath.id,   sceneId: sceneId, x: 0.72, y: 0.68, width: 0.22, height: 0.22, zIndex: 1),
+            Placement(objectId: waterCup.id,   sceneId: sceneId, x: 0.80, y: 0.48, width: 0.12, height: 0.12, zIndex: 0),
+            Placement(objectId: ivPole.id,     sceneId: sceneId, x: 0.88, y: 0.20, width: 0.10, height: 0.18, zIndex: 0),
+            Placement(objectId: famChair.id,   sceneId: sceneId, x: 0.04, y: 0.62, width: 0.14, height: 0.18, zIndex: 0),
         ]
 
         let habitacion = SceneTalkScene(
             id: sceneId,
             profileId: profileId,
             name: "Habitación Hospital",
+            backgroundAssetName: "procedural:hospital",
             placements: placements
         )
         return SeedResult(objects: allObjects, scenes: [habitacion])

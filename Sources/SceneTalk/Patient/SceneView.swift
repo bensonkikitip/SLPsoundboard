@@ -45,9 +45,13 @@ struct SceneView: View {
 
     @ViewBuilder
     private func background(in geo: GeometryProxy) -> some View {
-        if let assetName = scene.backgroundAssetName,
-           let url = documentsURL(for: assetName),
-           let uiImage = UIImage(contentsOfFile: url.path) {
+        if let style = ProceduralBackground.style(from: scene.backgroundAssetName) {
+            // Procedural SwiftUI background — no image asset needed
+            ProceduralSceneBackgroundView(style: style)
+                .frame(width: geo.size.width, height: geo.size.height)
+        } else if let assetName = scene.backgroundAssetName,
+                  let url = documentsURL(for: assetName),
+                  let uiImage = UIImage(contentsOfFile: url.path) {
             Image(uiImage: uiImage)
                 .resizable()
                 .scaledToFill()

@@ -6,10 +6,12 @@ struct PINUnlockView: View {
 
     let manifest: ProfileManifest
     let onUnlock: (String) async -> Bool   // returns false if PIN wrong
+    let onReset: () -> Void                // erase profile and return to wizard
 
     @State private var digits = ""
     @State private var showMismatch = false
     @State private var isChecking = false
+    @State private var showResetAlert = false
 
     var body: some View {
         VStack(spacing: 32) {
@@ -49,10 +51,25 @@ struct PINUnlockView: View {
             UnlockNumberPad(onDigit: appendDigit, onDelete: { if !digits.isEmpty { digits.removeLast() } })
 
             Spacer()
+
+            // Escape hatch: forgot PIN
+            Button(String(localized: "Forgot PIN? Reset profile…")) {
+                showResetAlert = true
+            }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .padding(.bottom, 24)
+            .accessibilityLabel(String(localized: "Forgot PIN — reset and erase all profile data"))
         }
         .padding(.vertical, 40)
         .frame(maxWidth: 400)
         .frame(maxWidth: .infinity)
+        .alert(String(localized: "Reset Profile?"), isPresented: $showResetAlert) {
+            Button(String(localized: "Reset & Erase"), role: .destructive) { onReset() }
+            Button(String(localized: "Cancel"), role: .cancel) {}
+        } message: {
+            Text(String(localized: "This will permanently erase all data for \(manifest.name). This cannot be undone."))
+        }
     }
 
     // MARK: - Private

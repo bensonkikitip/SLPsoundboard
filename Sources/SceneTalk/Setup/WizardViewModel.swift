@@ -138,8 +138,11 @@ final class WizardViewModel {
         return profile
     }
 
-    /// Produce the Hospital starter seed whose objects are pre-linked to the new profile.
+    /// Produce the starter seed for the selected mode, pre-linked to the new profile.
     func buildSeed() -> HospitalStarter.SeedResult {
-        HospitalStarter.seed(profileId: newProfileId, language: language)
+        switch storageMode {
+        case .hospital: HospitalStarter.seed(profileId: newProfileId, language: language)
+        case .home:     HomeStarter.seed(profileId: newProfileId, language: language)
+        }
     }
 }

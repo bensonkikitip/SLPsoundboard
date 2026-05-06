@@ -21,6 +21,11 @@ struct SceneView: View {
                 // Background
                 background(in: geo)
 
+                // Hotspot regions (below object placements so objects stay on top)
+                ForEach(scene.hotspots) { hotspot in
+                    hotspotView(hotspot: hotspot, size: geo.size)
+                }
+
                 // Placements (sorted by zIndex)
                 ForEach(scene.placements.sorted(by: { $0.zIndex < $1.zIndex })) { placement in
                     if let obj = objects.first(where: { $0.id == placement.objectId }) {
@@ -45,9 +50,13 @@ struct SceneView: View {
 
     @ViewBuilder
     private func background(in geo: GeometryProxy) -> some View {
-        if let assetName = scene.backgroundAssetName,
-           let url = documentsURL(for: assetName),
-           let uiImage = UIImage(contentsOfFile: url.path) {
+        if let style = ProceduralBackground.style(from: scene.backgroundAssetName) {
+            // Procedural SwiftUI background — no image asset needed
+            ProceduralSceneBackgroundView(style: style)
+                .frame(width: geo.size.width, height: geo.size.height)
+        } else if let assetName = scene.backgroundAssetName,
+                  let url = documentsURL(for: assetName),
+                  let uiImage = UIImage(contentsOfFile: url.path) {
             Image(uiImage: uiImage)
                 .resizable()
                 .scaledToFill()
@@ -87,6 +96,61 @@ struct SceneView: View {
             handleTap(object: object)
         }
         .position(x: x + w / 2, y: y + h / 2)
+    }
+
+    // MARK: - Hotspot view
+
+    private func hotspotView(hotspot: SceneHotspot, size: CGSize) -> some View {
+        let x = hotspot.x * size.width
+        let y = hotspot.y * size.height
+        let w = hotspot.width * size.width
+        let h = hotspot.height * size.height
+
+        return Button {
+            handleHotspotTap(hotspot: hotspot)
+        } label: {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.white.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(Color.white.opacity(0.25), lineWidth: 1)
+                    )
+                Text(hotspot.label)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.5), radius: 2)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .padding(4)
+            }
+            .frame(width: w, height: h)
+        }
+        .buttonStyle(.plain)
+        .position(x: x + w / 2, y: y + h / 2)
+        .accessibilityLabel(hotspot.label)
+        .accessibilityHint(String(localized: "Tap to speak: \(hotspot.ttsText)"))
+    }
+
+    private func handleHotspotTap(hotspot: SceneHotspot) {
+        withAnimation {
+            lastTappedLabel = hotspot.label
+        }
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        // Synthesise a temporary SceneObject so AudioService's existing play(object:language:)
+        // handles both recorded audio and TTS fallback — same pattern as EssentialsBar.
+        let obj = SceneObject(
+            profileId: UUID(),
+            label: hotspot.label,
+            kind: .phraseIntent,
+            audioAssetName: hotspot.audioAssetName,
+            ttsOverride: hotspot.ttsOverride
+        )
+        Task { await audioService.play(object: obj, language: language) }
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            withAnimation { lastTappedLabel = nil }
+        }
     }
 
     // MARK: - Label flash
@@ -205,21 +269,8 @@ private struct ObjectTileView: View {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             onTap()
         } label: {
-            VStack(spacing: 4) {
-                // Object image (cutout) or placeholder icon
-                objectImage
-                    .frame(width: width * 0.75, height: height * 0.65)
-
-                // Label
-                Text(object.label)
-                    .font(.system(size: min(width * 0.14, 16), weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.7), radius: 2)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .frame(width: width)
-            }
-            .frame(width: width, height: height)
+            objectArtwork
+                .frame(width: width, height: height)
         }
         .buttonStyle(.plain)
         .scaleEffect(isPressed ? 0.93 : 1.0)
@@ -233,22 +284,27 @@ private struct ObjectTileView: View {
         .accessibilityHint(String(localized: "Tap to speak: \(object.ttsText)"))
     }
 
+    /// The object's visual representation. Priority:
+    ///   1. Custom drawn artwork via `SceneObjectArtworkView` if the object's
+    ///      `imageAssetName` carries an `"art:..."` key OR a legacy
+    ///      `"sfsymbol:..."` value.
+    ///   2. A user-authored cutout image loaded from documents directory.
+    ///   3. Fall through to `SceneObjectArtworkView`'s neutral placeholder.
     @ViewBuilder
-    private var objectImage: some View {
-        if let assetName = object.imageAssetName,
-           let url = FileManager.default
-                .urls(for: .documentDirectory, in: .userDomainMask)
-                .first?
-                .appendingPathComponent(assetName),
-           let uiImage = UIImage(contentsOfFile: url.path) {
+    private var objectArtwork: some View {
+        if object.artworkKey != nil || object.systemImageName != nil {
+            SceneObjectArtworkView(object: object, width: width, height: height)
+        } else if let assetName = object.imageAssetName,
+                  let url = FileManager.default
+                    .urls(for: .documentDirectory, in: .userDomainMask)
+                    .first?
+                    .appendingPathComponent(assetName),
+                  let uiImage = UIImage(contentsOfFile: url.path) {
             Image(uiImage: uiImage)
                 .resizable()
                 .scaledToFit()
         } else {
-            // Placeholder icon until cutout is authored
-            Image(systemName: object.kind == .phraseIntent ? "bubble.left.fill" : "photo")
-                .font(.system(size: width * 0.3))
-                .foregroundStyle(.white.opacity(0.85))
+            SceneObjectArtworkView(object: object, width: width, height: height)
         }
     }
 }

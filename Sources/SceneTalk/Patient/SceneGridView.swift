@@ -113,9 +113,17 @@ private struct SceneTileView: View {
                     .fill(Color.secondary.opacity(0.12))
                     .aspectRatio(4/3, contentMode: .fit)
 
-                if scene.backgroundAssetName != nil {
-                    // Actual image loaded from documents dir — wired in slice 9
-                    Color.secondary.opacity(0.2)
+                if let style = ProceduralBackground.style(from: scene.backgroundAssetName) {
+                    ProceduralSceneBackgroundView(style: style)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                } else if let assetName = scene.backgroundAssetName,
+                          let url = FileManager.default
+                            .urls(for: .documentDirectory, in: .userDomainMask)
+                            .first?.appendingPathComponent(assetName),
+                          let uiImage = UIImage(contentsOfFile: url.path) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                 } else {
                     Image(systemName: "photo")

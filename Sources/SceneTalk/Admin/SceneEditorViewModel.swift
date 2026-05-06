@@ -8,18 +8,37 @@ import Observation
 final class SceneEditorViewModel {
 
     private let baseScene: SceneTalkScene
-    let availableObjects: [SceneObject]
+    var sceneId: UUID { baseScene.id }
+    private(set) var availableObjects: [SceneObject]
 
     private(set) var placements: [Placement]
     var backgroundAssetName: String?
     var sceneName: String
 
+    private(set) var hotspots: [SceneHotspot]
+
     init(scene: SceneTalkScene, availableObjects: [SceneObject]) {
         self.baseScene = scene
         self.availableObjects = availableObjects
         self.placements = scene.placements
+        self.hotspots = scene.hotspots
         self.backgroundAssetName = scene.backgroundAssetName
         self.sceneName = scene.name
+    }
+
+    // MARK: - Object mutation
+
+    /// Add a newly-authored object to the available set, then immediately place it.
+    func addObject(_ object: SceneObject, at point: CGPoint = CGPoint(x: 0.5, y: 0.45)) {
+        registerObject(object)
+        addPlacement(for: object, at: point)
+    }
+
+    /// Register an object in the available set without placing it.
+    /// Call this before `addPlacement` when placement is handled separately.
+    func registerObject(_ object: SceneObject) {
+        guard !availableObjects.contains(where: { $0.id == object.id }) else { return }
+        availableObjects.append(object)
     }
 
     // MARK: - Placement CRUD
@@ -54,16 +73,33 @@ final class SceneEditorViewModel {
         placements.removeAll { $0.id == id }
     }
 
+    // MARK: - Hotspot CRUD
+
+    func addHotspot(_ hotspot: SceneHotspot) {
+        hotspots.append(hotspot)
+    }
+
+    /// Replace an existing hotspot (matched by id). No-op if the id is unknown.
+    func updateHotspot(_ hotspot: SceneHotspot) {
+        guard let idx = hotspots.firstIndex(where: { $0.id == hotspot.id }) else { return }
+        hotspots[idx] = hotspot
+    }
+
+    func deleteHotspot(id: UUID) {
+        hotspots.removeAll { $0.id == id }
+    }
+
     // MARK: - Build result
 
-    /// Returns the updated `SceneTalkScene` with current placements.
+    /// Returns the updated `SceneTalkScene` with current placements and hotspots.
     func buildScene() -> SceneTalkScene {
         SceneTalkScene(
             id: baseScene.id,
             profileId: baseScene.profileId,
             name: sceneName,
             backgroundAssetName: backgroundAssetName,
-            placements: placements
+            placements: placements,
+            hotspots: hotspots
         )
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-/// A communication board: one background image + zero or more Placements.
+/// A communication board: one background image + zero or more Placements and Hotspots.
 ///
 /// Naming: `SceneTalkScene` (not `Scene`) to avoid collision with SwiftUI's `Scene`.
 struct SceneTalkScene: Identifiable, Equatable, Codable, Sendable {
@@ -24,6 +24,13 @@ struct SceneTalkScene: Identifiable, Equatable, Codable, Sendable {
     /// Array order does not imply rendering order — use `Placement.zIndex`.
     var placements: [Placement]
 
+    // MARK: Hotspots
+
+    /// Labeled rectangular tap regions drawn directly on the background photo.
+    /// Decoded with `decodeIfPresent` so scenes saved before hotspots were
+    /// introduced continue to load without error.
+    var hotspots: [SceneHotspot]
+
     // MARK: Init
 
     init(
@@ -31,13 +38,31 @@ struct SceneTalkScene: Identifiable, Equatable, Codable, Sendable {
         profileId: UUID,
         name: String,
         backgroundAssetName: String? = nil,
-        placements: [Placement] = []
+        placements: [Placement] = [],
+        hotspots: [SceneHotspot] = []
     ) {
         self.id = id
         self.profileId = profileId
         self.name = name
         self.backgroundAssetName = backgroundAssetName
         self.placements = placements
+        self.hotspots = hotspots
+    }
+
+    // MARK: Codable
+
+    private enum CodingKeys: String, CodingKey {
+        case id, profileId, name, backgroundAssetName, placements, hotspots
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id                  = try c.decode(UUID.self, forKey: .id)
+        profileId           = try c.decode(UUID.self, forKey: .profileId)
+        name                = try c.decode(String.self, forKey: .name)
+        backgroundAssetName = try c.decodeIfPresent(String.self, forKey: .backgroundAssetName)
+        placements          = try c.decode([Placement].self, forKey: .placements)
+        hotspots            = try c.decodeIfPresent([SceneHotspot].self, forKey: .hotspots) ?? []
     }
 
     // MARK: Equatable

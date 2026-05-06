@@ -10,8 +10,9 @@ struct EssentialsBar: View {
     let audioService: any AudioService
     let language: Language
 
-    // Hit-target size comes from the profile's layout preference (passed in via environment in slice 16)
-    var itemSize: CGFloat = 80
+    // Hit-target size — defaults to a value that lets all 9 default Essentials
+    // items fit on iPad portrait without horizontal scrolling.
+    var itemSize: CGFloat = 64
 
     var body: some View {
         Group {
@@ -28,7 +29,7 @@ struct EssentialsBar: View {
 
     private var horizontalBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 ForEach(config.items) { item in
                     EssentialButton(
                         item: item,
@@ -40,13 +41,14 @@ struct EssentialsBar: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
+            .frame(maxWidth: .infinity)
         }
         .background(.ultraThinMaterial)
     }
 
     private var verticalBar: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 ForEach(config.items) { item in
                     EssentialButton(
                         item: item,
@@ -83,9 +85,11 @@ private struct EssentialButton: View {
                 Image(systemName: item.systemImageName)
                     .imageScale(.large)
                     .font(.system(size: size * 0.35))
+                    .foregroundStyle(item.tintColor.color)
                     .frame(width: size * 0.6, height: size * 0.5)
                 Text(item.label)
-                    .font(.caption.weight(.medium))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(item.tintColor.color)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
                     .frame(width: size - 8)
@@ -93,7 +97,13 @@ private struct EssentialButton: View {
             .frame(width: size, height: size)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isPressed ? Color.accentColor.opacity(0.3) : Color.secondary.opacity(0.15))
+                    .fill(isPressed
+                        ? item.tintColor.color.opacity(0.35)
+                        : item.tintColor.color.opacity(0.12))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(item.tintColor.color.opacity(0.25), lineWidth: 1)
             )
         }
         .buttonStyle(.plain)

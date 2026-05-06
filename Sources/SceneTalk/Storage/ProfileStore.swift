@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UIKit
 
 /// Lightweight manifest stored in UserDefaults — contains only non-PHI metadata
 /// needed to identify which profile is present and to show the PIN entry screen.
@@ -69,7 +70,7 @@ final class ProfileStore {
 
         self.profile = loadedProfile
         self.objects = (try? await repo.loadObjects(profileId: mf.id)) ?? []
-        self.scenes  = (try? await repo.loadScenes(profileId: mf.id)) ?? []
+        self.scenes  = migrateBackgrounds((try? await repo.loadScenes(profileId: mf.id)) ?? [])
         return true
     }
 
@@ -103,12 +104,92 @@ final class ProfileStore {
         self.objects = updatedObjects
     }
 
+    /// Synchronously update the in-memory scene list without touching disk.
+    /// Call this first for an instant UI refresh, then follow with `saveScenes`
+    /// (async) for persistence.
+    func updateScenesInMemory(_ updatedScenes: [SceneTalkScene]) {
+        self.scenes = updatedScenes
+    }
+
     /// Persist an updated scene list for the active profile.
     func saveScenes(_ updatedScenes: [SceneTalkScene], pin: String) async throws {
         guard let profile else { return }
         let repo = EncryptedLocalRepository(baseDirectory: dataDirectory, pin: pin, profileId: profile.id)
         try await repo.save(scenes: updatedScenes, profileId: profile.id)
         self.scenes = updatedScenes
+    }
+
+    // MARK: - Cutout & audio asset persistence
+    //
+    // Cutout PNGs and recorded voice clips live as plain files under
+    //   <dataDirectory>/<profileId>/cutouts/<objectId>.png
+    //   <dataDirectory>/<profileId>/audio/<objectId>.m4a
+    //
+    // The returned relative path is what the caller stores into the object's
+    // `imageAssetName` / `audioAssetName`. View code resolves that path
+    // against the documents directory (same convention as SceneView).
+    //
+    // Encryption-at-rest for these binary blobs is deferred — V1's PHI
+    // contract is the encrypted export bundle (`.scenetalk`), not at-rest.
+
+    /// Persist cutout PNG bytes for an object. Returns relative asset name.
+    func saveCutout(_ data: Data, profileId: UUID, objectId: UUID) throws -> String {
+        let dir = dataDirectory
+            .appendingPathComponent(profileId.uuidString)
+            .appendingPathComponent("cutouts")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("\(objectId.uuidString).png")
+        try data.write(to: url, options: [.atomic])
+        return "\(profileId.uuidString)/cutouts/\(objectId.uuidString).png"
+    }
+
+    /// Persist recorded audio bytes for an object. Returns relative asset name.
+    func saveAudio(_ data: Data, profileId: UUID, objectId: UUID) throws -> String {
+        let dir = dataDirectory
+            .appendingPathComponent(profileId.uuidString)
+            .appendingPathComponent("audio")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("\(objectId.uuidString).m4a")
+        try data.write(to: url, options: [.atomic])
+        return "\(profileId.uuidString)/audio/\(objectId.uuidString).m4a"
+    }
+
+    /// Persist a scene background photo. Converts to JPEG for compactness.
+    /// Returns relative asset name `"<profileId>/backgrounds/<sceneId>.jpg"`.
+    func saveBackground(_ data: Data, profileId: UUID, sceneId: UUID) throws -> String {
+        let dir = dataDirectory
+            .appendingPathComponent(profileId.uuidString)
+            .appendingPathComponent("backgrounds")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("\(sceneId.uuidString).jpg")
+        // Compress to JPEG; fall back to raw data if conversion fails
+        let toWrite: Data
+        if let uiImage = UIImage(data: data),
+           let jpeg = uiImage.jpegData(compressionQuality: 0.85) {
+            toWrite = jpeg
+        } else {
+            toWrite = data
+        }
+        try toWrite.write(to: url, options: [.atomic])
+        return "\(profileId.uuidString)/backgrounds/\(sceneId.uuidString).jpg"
+    }
+
+    /// Resolve an asset name (relative to documents dir) to an absolute URL,
+    /// or nil if the file doesn't exist.
+    func assetURL(forRelativePath path: String) -> URL? {
+        let url = dataDirectory.appendingPathComponent(path)
+        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
+    /// Delete the background JPEG associated with a scene. Used when a scene is
+    /// removed from the admin grid so the file doesn't orphan on disk. Silent
+    /// on failure (file may not exist for scenes that never had a custom background).
+    func deleteBackgroundAsset(profileId: UUID, sceneId: UUID) {
+        let url = dataDirectory
+            .appendingPathComponent(profileId.uuidString)
+            .appendingPathComponent("backgrounds")
+            .appendingPathComponent("\(sceneId.uuidString).jpg")
+        try? FileManager.default.removeItem(at: url)
     }
 
     // MARK: - Clear (for tests / profile deletion)
@@ -119,6 +200,28 @@ final class ProfileStore {
         profile  = nil
         objects  = []
         scenes   = []
+    }
+
+    // MARK: - Migrations
+
+    /// Patches scenes loaded from pre-background-era saves so they show procedural
+    /// backgrounds without requiring the user to reset their profile.
+    private func migrateBackgrounds(_ scenes: [SceneTalkScene]) -> [SceneTalkScene] {
+        scenes.map { scene in
+            guard scene.backgroundAssetName == nil else { return scene }
+            var copy = scene
+            switch scene.name {
+            case "Hospital Room", "Habitación Hospital":
+                copy.backgroundAssetName = "procedural:hospital"
+            case "Kitchen", "Cocina":
+                copy.backgroundAssetName = "procedural:kitchen"
+            case "Living Room", "Sala":
+                copy.backgroundAssetName = "procedural:living"
+            default:
+                break
+            }
+            return copy
+        }
     }
 
     // MARK: - UserDefaults helpers

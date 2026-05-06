@@ -11,7 +11,6 @@ struct RootView: View {
     @State private var store = ProfileStore()
     @State private var appMode = AppModeState()
     @State private var showPINEntry = false
-    @State private var showAdminSettings = false
 
     /// Raw PIN captured during wizard — held in memory only, never written to disk as plaintext.
     @State private var sessionPIN: String = ""
@@ -22,11 +21,15 @@ struct RootView: View {
                 profileLoaded
             } else if store.hasProfile {
                 // Manifest exists but data not yet decrypted — prompt for PIN
-                PINUnlockView(manifest: store.manifest!) { pin in
-                    let ok = await store.load(pin: pin)
-                    if ok { sessionPIN = pin }
-                    return ok
-                }
+                PINUnlockView(
+                    manifest: store.manifest!,
+                    onUnlock: { pin in
+                        let ok = await store.load(pin: pin)
+                        if ok { sessionPIN = pin }
+                        return ok
+                    },
+                    onReset: { store.clear() }
+                )
             } else {
                 // First launch — run setup wizard
                 WizardView { profile, pin, seed in
@@ -45,16 +48,22 @@ struct RootView: View {
 
     // MARK: - Profile loaded
 
+    @ViewBuilder
     private var profileLoaded: some View {
-        Group {
-            if let profile = store.profile {
-                switch appMode.mode {
-                case .patient: AnyView(patientShell(profile: profile))
-                case .admin:   AnyView(adminShell(profile: profile))
-                }
-            } else {
-                EmptyView()
+        if let profile = store.profile {
+            switch appMode.mode {
+            case .patient:
+                patientShell(profile: profile)
+            case .admin:
+                AdminShellView(
+                    profile: profile,
+                    store: store,
+                    appMode: appMode,
+                    sessionPIN: sessionPIN
+                )
             }
+        } else {
+            EmptyView()
         }
     }
 
@@ -77,27 +86,75 @@ struct RootView: View {
                 showPINEntry = false
                 appMode.unlockAdmin()
             }
-            .presentationDetents([.medium])
-            .interactiveDismissDisabled()
+            .presentationDetents([.large])
         }
     }
+}
 
-    // MARK: - Admin shell
+// MARK: - Admin shell
+//
+// Extracted from RootView so its `library` (and other admin-only state) lives
+// in `@State` with stable identity across re-renders. Previously, building the
+// library inside a method on RootView caused a fresh ObjectLibrary instance on
+// every render, which made newly-added objects vanish from the UI before the
+// async `saveObjects` task completed.
 
-    private func adminShell(profile: Profile) -> some View {
-        let library = ObjectLibrary(profileId: profile.id, objects: store.objects)
+private struct AdminShellView: View {
+
+    let profile: Profile
+    let store: ProfileStore
+    let appMode: AppModeState
+    let sessionPIN: String
+
+    @State private var library: ObjectLibrary
+    @State private var showAdminSettings = false
+    @State private var showObjectLibrary = false
+
+    init(profile: Profile, store: ProfileStore, appMode: AppModeState, sessionPIN: String) {
+        self.profile = profile
+        self.store = store
+        self.appMode = appMode
+        self.sessionPIN = sessionPIN
+        // Seed the library once from store.objects; subsequent renders reuse this instance.
+        self._library = State(initialValue: ObjectLibrary(profileId: profile.id, objects: store.objects))
+    }
+
+    var body: some View {
+        let scenesBinding = Binding<[SceneTalkScene]>(
+            get: { store.scenes },
+            set: { newValue in
+                store.updateScenesInMemory(newValue)   // synchronous — triggers immediate re-render
+                Task { try? await store.saveScenes(newValue, pin: sessionPIN) }
+            }
+        )
+
         return NavigationStack {
-            ObjectLibraryView(
-                library: library,
-                language: profile.language,
-                onDismiss: {
-                    // Persist any library changes before locking
-                    Task {
-                        try? await store.saveObjects(library.objects, pin: sessionPIN)
-                    }
-                    appMode.lockToPatient()
+            AdminSceneListView(
+                profile: profile,
+                scenes: scenesBinding,
+                availableObjects: library.objects,
+                onScenesChanged: { updated in
+                    Task { try? await store.saveScenes(updated, pin: sessionPIN) }
+                },
+                saveCutout: { data, objectId in
+                    try store.saveCutout(data, profileId: profile.id, objectId: objectId)
+                },
+                saveAudio: { data, objectId in
+                    try store.saveAudio(data, profileId: profile.id, objectId: objectId)
+                },
+                saveBackground: { data, sceneId in
+                    try store.saveBackground(data, profileId: profile.id, sceneId: sceneId)
+                },
+                onObjectAdded: { obj in
+                    library.add(obj)
+                    Task { try? await store.saveObjects(library.objects, pin: sessionPIN) }
+                },
+                onSceneDeleted: { scene in
+                    store.deleteBackgroundAsset(profileId: profile.id, sceneId: scene.id)
                 }
             )
+            .navigationTitle(String(localized: "Scenes"))
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(String(localized: "Lock")) {
@@ -106,10 +163,35 @@ struct RootView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
+                    Button { showObjectLibrary = true } label: {
+                        Image(systemName: "books.vertical")
+                    }
+                    .accessibilityLabel(String(localized: "Object Library"))
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { showAdminSettings = true } label: {
                         Image(systemName: "gear")
                     }
-                    .accessibilityLabel(String(localized: "Language Settings"))
+                    .accessibilityLabel(String(localized: "Settings"))
+                }
+            }
+            .sheet(isPresented: $showObjectLibrary) {
+                ObjectLibraryView(
+                    library: library,
+                    language: profile.language,
+                    saveCutout: { data, objectId in
+                        try store.saveCutout(data, profileId: profile.id, objectId: objectId)
+                    },
+                    saveAudio: { data, objectId in
+                        try store.saveAudio(data, profileId: profile.id, objectId: objectId)
+                    },
+                    onDismiss: {
+                        Task { try? await store.saveObjects(library.objects, pin: sessionPIN) }
+                        showObjectLibrary = false
+                    }
+                )
+                .onDisappear {
+                    Task { try? await store.saveObjects(library.objects, pin: sessionPIN) }
                 }
             }
             .sheet(isPresented: $showAdminSettings) {
@@ -131,7 +213,6 @@ struct RootView: View {
             }
         }
     }
-
 }
 
 #Preview {

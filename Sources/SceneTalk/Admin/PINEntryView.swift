@@ -9,6 +9,7 @@ struct PINEntryView: View {
 
     // Shake animation state
     @State private var shakeTrigger: Int = 0
+    @Environment(\.dismiss) private var dismiss
 
     init(profile: Profile, onUnlock: @escaping () -> Void) {
         _vm = State(initialValue: AdminGateViewModel(profile: profile))
@@ -18,38 +19,40 @@ struct PINEntryView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 40) {
-            Spacer()
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 28) {
+                    // Dot indicators
+                    dotIndicators
+                        .modifier(ShakeModifier(trigger: shakeTrigger))
+                        .padding(.top, 16)
 
-            // Title
-            Text("Admin Access")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(.primary)
+                    // Error message
+                    if vm.phase == .failed {
+                        Text(String(localized: "Incorrect PIN. Try again."))
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                    } else {
+                        Text(" ")
+                            .font(.footnote)
+                    }
 
-            Text("Enter PIN to edit this profile")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-            // Dot indicators
-            dotIndicators
-                .modifier(ShakeModifier(trigger: shakeTrigger))
-
-            // Error message
-            if vm.phase == .failed {
-                Text("Incorrect PIN. Try again.")
-                    .font(.footnote)
-                    .foregroundStyle(.red)
-            } else {
-                Text(" ") // placeholder to keep layout stable
-                    .font(.footnote)
+                    // Digit pad
+                    digitPad
+                        .padding(.bottom, 32)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 48)
             }
-
-            // Digit pad
-            digitPad
-
-            Spacer()
+            .scrollDisabled(true)
+            .navigationTitle(String(localized: "Admin Access"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(String(localized: "Cancel")) { dismiss() }
+                }
+            }
         }
-        .padding(.horizontal, 48)
         .onChange(of: vm.phase) { _, newPhase in
             switch newPhase {
             case .unlocked:

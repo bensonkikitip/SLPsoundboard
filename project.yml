@@ -42,10 +42,6 @@ targets:
         NSCameraUsageDescription: "SceneTalk uses the camera to photograph backgrounds and objects for new scenes."
     entitlements:
       path: Sources/SceneTalk/SceneTalk.entitlements
-      properties:
-        com.apple.security.application-groups: []   # CloudKit sharing group added in slice 13
-        com.apple.developer.icloud-container-identifiers: []
-        com.apple.developer.icloud-services: []
     dependencies: []
 
   SceneTalkTests:

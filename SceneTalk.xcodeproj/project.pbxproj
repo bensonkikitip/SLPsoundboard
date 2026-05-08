@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		03611374410521A0AAE2A936 /* ProceduralSceneBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF43705FCD152F56A5309FE /* ProceduralSceneBackground.swift */; };
 		3CC2CF13B5814664B937A7C2 /* SceneEditorViewModelHotspotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06191205CC4841DA82ECA8E7 /* SceneEditorViewModelHotspotTests.swift */; };
+		C5893F555D8F458596068843 /* CoreUserFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1505C02EEAA94E04A407C2AE /* CoreUserFlowTests.swift */; };
 		60E22587B9AA40ADB84AC2AF /* HotspotEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B530E54C953C430992206DBC /* HotspotEditorSheet.swift */; };
 		BF26C05997AA4F2594EED360 /* SceneHotspot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A78EB3AA34400D965D84B6 /* SceneHotspot.swift */; };
 		F74617112296428E9A342AC7 /* SceneHotspotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173B374C0537418ABA1DBFCB /* SceneHotspotTests.swift */; };
@@ -80,6 +81,7 @@
 
 /* Begin PBXFileReference section */
 		06191205CC4841DA82ECA8E7 /* SceneEditorViewModelHotspotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneEditorViewModelHotspotTests.swift; sourceTree = "<group>"; };
+		1505C02EEAA94E04A407C2AE /* CoreUserFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreUserFlowTests.swift; sourceTree = "<group>"; };
 		09A2CBE0E89138C6ACF1F159 /* AudioServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioServiceTests.swift; sourceTree = "<group>"; };
 		0D1B4C8CEF5CF5C742268C41 /* CutoutPipelineViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutoutPipelineViewModel.swift; sourceTree = "<group>"; };
 		118C0FD8B87973377632ED5D /* EssentialsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EssentialsBar.swift; sourceTree = "<group>"; };
@@ -204,6 +206,7 @@
 				9812BAD88BE710FDC4E9D809 /* RepositoryTests.swift */,
 				8C14D249592DE936389D292D /* SceneEditorTests.swift */,
 				06191205CC4841DA82ECA8E7 /* SceneEditorViewModelHotspotTests.swift */,
+				1505C02EEAA94E04A407C2AE /* CoreUserFlowTests.swift */,
 				173B374C0537418ABA1DBFCB /* SceneHotspotTests.swift */,
 				D862F8D62A0BECBD2093F295 /* SmokeTests.swift */,
 				B7F3BB78901F6A24F2ECC34B /* WizardViewModelTests.swift */,
@@ -486,6 +489,7 @@
 				44BAE6F27AB01D80D6F15726 /* RepositoryTests.swift in Sources */,
 				3DAF859E7242B20937C573FA /* SceneEditorTests.swift in Sources */,
 				3CC2CF13B5814664B937A7C2 /* SceneEditorViewModelHotspotTests.swift in Sources */,
+				C5893F555D8F458596068843 /* CoreUserFlowTests.swift in Sources */,
 				F74617112296428E9A342AC7 /* SceneHotspotTests.swift in Sources */,
 				39436CC2086A6A15572CA448 /* SmokeTests.swift in Sources */,
 				968A6CEB3DF64856863BAF80 /* WizardViewModelTests.swift in Sources */,

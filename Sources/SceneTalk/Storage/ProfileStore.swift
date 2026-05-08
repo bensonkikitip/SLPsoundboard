@@ -106,9 +106,17 @@ final class ProfileStore {
             manifests.append(mf)
         }
         Self.saveManifests(manifests, to: defaults)
-        self.profile = profile
-        self.objects = objects
-        self.scenes = scenes
+        // Only replace the in-memory session when:
+        //   • no session is active (first launch / wizard), OR
+        //   • we're updating the profile that is already loaded.
+        // This prevents the "Add Profile" wizard from silently logging out the
+        // currently-active user and replacing their in-memory state with the
+        // newly-created profile.
+        if self.profile == nil || self.profile?.id == profile.id {
+            self.profile = profile
+            self.objects = objects
+            self.scenes = scenes
+        }
     }
 
     /// Persist an updated object list for the active profile.

@@ -7,6 +7,8 @@ struct PINUnlockView: View {
     let manifest: ProfileManifest
     let onUnlock: (String) async -> Bool   // returns false if PIN wrong
     let onReset: () -> Void                // erase profile and return to wizard
+    /// When non-nil, a "← Profiles" back button is shown (multiple-profile case).
+    var onBack: (() -> Void)? = nil
 
     @State private var digits = ""
     @State private var showMismatch = false
@@ -14,7 +16,18 @@ struct PINUnlockView: View {
     @State private var showResetAlert = false
 
     var body: some View {
-        VStack(spacing: 32) {
+        ZStack(alignment: .topLeading) {
+            // Back button — only visible when multiple profiles exist
+            if let onBack {
+                Button(action: onBack) {
+                    Label(String(localized: "Profiles"), systemImage: "chevron.left")
+                        .font(.callout.weight(.medium))
+                }
+                .padding(24)
+                .accessibilityLabel(String(localized: "Back to profile list"))
+            }
+
+            VStack(spacing: 32) {
             Spacer()
 
             Image(systemName: "lock.shield.fill")
@@ -70,6 +83,7 @@ struct PINUnlockView: View {
         } message: {
             Text(String(localized: "This will permanently erase all data for \(manifest.name). This cannot be undone."))
         }
+        } // ZStack
     }
 
     // MARK: - Private

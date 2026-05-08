@@ -9,12 +9,14 @@
 /* Begin PBXBuildFile section */
 		03611374410521A0AAE2A936 /* ProceduralSceneBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF43705FCD152F56A5309FE /* ProceduralSceneBackground.swift */; };
 		3CC2CF13B5814664B937A7C2 /* SceneEditorViewModelHotspotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06191205CC4841DA82ECA8E7 /* SceneEditorViewModelHotspotTests.swift */; };
+		C5893F555D8F458596068843 /* CoreUserFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1505C02EEAA94E04A407C2AE /* CoreUserFlowTests.swift */; };
 		60E22587B9AA40ADB84AC2AF /* HotspotEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B530E54C953C430992206DBC /* HotspotEditorSheet.swift */; };
 		BF26C05997AA4F2594EED360 /* SceneHotspot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A78EB3AA34400D965D84B6 /* SceneHotspot.swift */; };
 		F74617112296428E9A342AC7 /* SceneHotspotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173B374C0537418ABA1DBFCB /* SceneHotspotTests.swift */; };
 		043AED837D78BA8847CDBA18 /* ObjectLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536064C5DB51D852D03B6D81 /* ObjectLibraryView.swift */; };
 		0ED5AF8F0E0ACAA996F301D1 /* ObjectLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DB9A57E3DD7661F0A559026 /* ObjectLibrary.swift */; };
 		11AAEB45D9468FA62646F3F9 /* SceneTalkApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E6183F869ECD4695824DE6 /* SceneTalkApp.swift */; };
+		FEB45D4AFBF544429ED04522 /* ProfilePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC64BE86AE6A44C584C4AD81 /* ProfilePickerView.swift */; };
 		11ECC1CC4609BD337B71C1CC /* HospitalStarterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55504AEF891B885E0CF40F5A /* HospitalStarterTests.swift */; };
 		151B43A5A671B27639B0BB04 /* SceneGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F49A10666D7F2BDD20BBDC63 /* SceneGridView.swift */; };
 		15705483ABF88AAAA1CCF167 /* AdminGateViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B8CC3521BD188FA2A826D4 /* AdminGateViewModelTests.swift */; };
@@ -79,6 +81,7 @@
 
 /* Begin PBXFileReference section */
 		06191205CC4841DA82ECA8E7 /* SceneEditorViewModelHotspotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneEditorViewModelHotspotTests.swift; sourceTree = "<group>"; };
+		1505C02EEAA94E04A407C2AE /* CoreUserFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreUserFlowTests.swift; sourceTree = "<group>"; };
 		09A2CBE0E89138C6ACF1F159 /* AudioServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioServiceTests.swift; sourceTree = "<group>"; };
 		0D1B4C8CEF5CF5C742268C41 /* CutoutPipelineViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutoutPipelineViewModel.swift; sourceTree = "<group>"; };
 		118C0FD8B87973377632ED5D /* EssentialsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EssentialsBar.swift; sourceTree = "<group>"; };
@@ -112,11 +115,12 @@
 		87C315C13665B3DC0F2F967A /* AdminGateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminGateViewModel.swift; sourceTree = "<group>"; };
 		8C14D249592DE936389D292D /* SceneEditorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneEditorTests.swift; sourceTree = "<group>"; };
 		8D4819D27AAC7F4AAE9AA86F /* PINUnlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PINUnlockView.swift; sourceTree = "<group>"; };
+		BC64BE86AE6A44C584C4AD81 /* ProfilePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePickerView.swift; sourceTree = "<group>"; };
 		8DB9A57E3DD7661F0A559026 /* ObjectLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectLibrary.swift; sourceTree = "<group>"; };
 		9812BAD88BE710FDC4E9D809 /* RepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryTests.swift; sourceTree = "<group>"; };
 		9B5ED58F4AC3ECA031394426 /* AdminSceneListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminSceneListView.swift; sourceTree = "<group>"; };
 		A5A7BCE4B0E206920E44A8AD /* ProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStore.swift; sourceTree = "<group>"; };
-		A637B208D413AF0067428CC5 /* SceneTalk.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SceneTalk.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A637B208D413AF0067428CC5 /* SceneTalk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SceneTalk.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A651A6E40534A3E07E56AE6B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A73A1EE74878A8312C4F12BD /* SceneObjectArtworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneObjectArtworkView.swift; sourceTree = "<group>"; };
 		B4E6183F869ECD4695824DE6 /* SceneTalkApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneTalkApp.swift; sourceTree = "<group>"; };
@@ -202,6 +206,7 @@
 				9812BAD88BE710FDC4E9D809 /* RepositoryTests.swift */,
 				8C14D249592DE936389D292D /* SceneEditorTests.swift */,
 				06191205CC4841DA82ECA8E7 /* SceneEditorViewModelHotspotTests.swift */,
+				1505C02EEAA94E04A407C2AE /* CoreUserFlowTests.swift */,
 				173B374C0537418ABA1DBFCB /* SceneHotspotTests.swift */,
 				D862F8D62A0BECBD2093F295 /* SmokeTests.swift */,
 				B7F3BB78901F6A24F2ECC34B /* WizardViewModelTests.swift */,
@@ -269,6 +274,7 @@
 			children = (
 				1D83FA2DCD767EB2232C9D0D /* AppModeState.swift */,
 				8D4819D27AAC7F4AAE9AA86F /* PINUnlockView.swift */,
+				BC64BE86AE6A44C584C4AD81 /* ProfilePickerView.swift */,
 				78A54545D061FAAE68ADEC2C /* RootView.swift */,
 				B4E6183F869ECD4695824DE6 /* SceneTalkApp.swift */,
 			);
@@ -380,7 +386,6 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					AFB2B0890C4F2EBC8107C806 = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -440,6 +445,7 @@
 				043AED837D78BA8847CDBA18 /* ObjectLibraryView.swift in Sources */,
 				7C0DBC7F256B804392F38D3C /* PINEntryView.swift in Sources */,
 				D32A20A2A6BE82F61024D9A3 /* PINUnlockView.swift in Sources */,
+				FEB45D4AFBF544429ED04522 /* ProfilePickerView.swift in Sources */,
 				8F8D00DFF316AD40144005FC /* Placement.swift in Sources */,
 				03611374410521A0AAE2A936 /* ProceduralSceneBackground.swift in Sources */,
 				4F42B5E616706FA9007A9901 /* Profile.swift in Sources */,
@@ -483,6 +489,7 @@
 				44BAE6F27AB01D80D6F15726 /* RepositoryTests.swift in Sources */,
 				3DAF859E7242B20937C573FA /* SceneEditorTests.swift in Sources */,
 				3CC2CF13B5814664B937A7C2 /* SceneEditorViewModelHotspotTests.swift in Sources */,
+				C5893F555D8F458596068843 /* CoreUserFlowTests.swift in Sources */,
 				F74617112296428E9A342AC7 /* SceneHotspotTests.swift in Sources */,
 				39436CC2086A6A15572CA448 /* SmokeTests.swift in Sources */,
 				968A6CEB3DF64856863BAF80 /* WizardViewModelTests.swift in Sources */,
@@ -507,7 +514,7 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/SceneTalk/SceneTalk.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4M6AR6JX8B;
 				INFOPLIST_FILE = Sources/SceneTalk/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -530,7 +537,7 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/SceneTalk/SceneTalk.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4M6AR6JX8B;
 				INFOPLIST_FILE = Sources/SceneTalk/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
